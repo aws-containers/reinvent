@@ -1,0 +1,5 @@
+# INV510 | Next generation etcd for Amazon EKS
+
+Amazon EKS has reimagined its etcd architecture to enable Kubernetes clusters with high availability, durability and performance, even at 100K nodes. In this session, we examine how offloading etcd's traditional Raft consensus algorithm to a robust log replication service improved our resiliency and scalability story. We'll dive into challenges faced by a traditional quorum-based database, exploring theoretical/practical constraints of performing consensus, and explain how offloading consensus eliminates trade-offs. We also cover how we achieved a fully in-memory store and key-space partitioning to enable high-throughput Kubernetes. Attendees will gain practical insights into distributed consensus and challenges of operating databases at hyperscale.
+
+## Session Resources
