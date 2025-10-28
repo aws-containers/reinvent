@@ -28,6 +28,7 @@ Discover how you can deploy and scale AI/ML workloads on Amazon EKS.
 - [CNS205](sessions/CNS205) - The Future of Kubernetes on AWS
 - [CNS210](sessions/CNS210) - From monolith to microservices: Migrate and modernize with Amazon EKS
 - [CNS344](sessions/CNS344) - Generative and Agentic AI on Amazon EKS
+- [CNS354](sessions/CNS354) - Amazon EKS Auto Mode: Evolving Kubernetes ops to enable innovation
 - [CNS429](sessions/CNS429) - Under the hood: Architecting Amazon EKS for scale and performance
 - [CNS417](sessions/CNS417) - Networking and observability strategies for Kubernetes
 
