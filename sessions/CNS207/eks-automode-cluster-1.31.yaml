@@ -1,0 +1,27 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: automode-demo-131
+  region: us-east-1
+  version: "1.31"
+
+# Enable EKS Auto Mode
+autoModeConfig:
+  enabled: true
+
+# Availability zones for better demo of topology spread
+availabilityZones:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+
+# CloudWatch logging
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler

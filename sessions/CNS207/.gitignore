@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+python-app/venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# AWS
+.aws/
+*.pem
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+.*.bak
+
+# Environment variables
+.env
+.env.local
+
+# Docker
+.dockerignore.bak
+
+# Terraform (if used)
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Backup files
+*.backup
+*-backup
+
+# OS files
+Thumbs.db

@@ -1,0 +1,31 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: automode-demo
+  region: us-east-1
+  version: "1.30"
+
+# Enable EKS Auto Mode
+autoModeConfig:
+  enabled: true
+  nodePools:
+    - general-purpose
+    - system
+  # eksctl will create the nodeRoleARN automatically
+
+# Availability zones for better demo of topology spread
+availabilityZones:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+
+# CloudWatch logging
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler
