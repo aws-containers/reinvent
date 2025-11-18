@@ -1,6 +1,6 @@
 # AWS re:Invent 2025 | Kubernetes Track Assets
 
-This repository contains slides, demos, and other assets for the Kubernetes (KUB) sub-track within the Containers & Serverless (CNS) track from AWS re:Invent 2025. Each session is organized by session number and title. Click on the session number to access the materials for that specific session.
+This repository contains slides, demos, and other assets for the Kubernetes (KUB) sub-track within the Containers & Serverless (CNS) track from AWS re:Invent 2025. Each session is organized by session number and title. Click on the session number to access the materials for that specific session. Any code samples/files are not supported products and should be thoroughly tested, secured, and optimized according to your organization's standards before production deployment.
 
 ## General Resources
 
@@ -70,7 +70,6 @@ Discover how you can deploy and scale AI/ML workloads on Amazon EKS.
 - [CNS322](sessions/CNS322) - Running compute efficient workloads on Amazon EKS Auto Mode
 - [CNS328](sessions/CNS328) - Paper to production: Hosting LLMs on Amazon EKS using NVIDIA GPUs
 - [CNS410](sessions/CNS410) - Optimize analytics workloads on Amazon EKS for performance and cost 
-
 
 ### Looking for re:Invent 2024 session resources?
 See [aws-samples/reinvent24](https://github.com/aws-samples/reinvent24).

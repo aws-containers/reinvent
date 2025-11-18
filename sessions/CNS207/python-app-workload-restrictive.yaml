@@ -1,0 +1,146 @@
+---
+# ServiceAccount for the demo app
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eks-demo-app-sa
+  namespace: default
+
+---
+# ClusterRole to read node and pod information
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-reader
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+---
+# ClusterRoleBinding to grant the ServiceAccount access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: eks-demo-app-node-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-reader
+subjects:
+- kind: ServiceAccount
+  name: eks-demo-app-sa
+  namespace: default
+
+---
+# Deployment with RESTRICTIVE PodDisruptionBudget and Topology Spread
+# This configuration will block Auto Mode from upgrading nodes
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eks-demo-app
+  namespace: default
+spec:
+  replicas: 6  # 6 replicas all on existing nodes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2        # Allow 2 extra pods during rollout
+      maxUnavailable: 1  # Only 1 pod can be unavailable at a time
+  selector:
+    matchLabels:
+      app: eks-demo-app
+  template:
+    metadata:
+      labels:
+        app: eks-demo-app
+    spec:
+      serviceAccountName: eks-demo-app-sa
+      # Spread across at least 2 nodes, but allow multiple pods per node
+      topologySpreadConstraints:
+      - maxSkew: 3  # Allow up to 3 pods difference between nodes
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: eks-demo-app
+      terminationGracePeriodSeconds: 60  # Give time for load balancer to deregister
+      containers:
+      - name: demo-app
+        image: 936068047509.dkr.ecr.us-east-1.amazonaws.com/eks-demo-app:latest
+        ports:
+        - containerPort: 8080
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]  # Wait for LB to deregister
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+
+        - name: SERVICE_URL
+          value: "Scan QR code to access this app!"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+
+---
+# RESTRICTIVE PodDisruptionBudget - blocks ALL node draining
+# With minAvailable: 6, Auto Mode cannot drain ANY node!
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: eks-demo-app-pdb
+  namespace: default
+spec:
+  minAvailable: 6  # ALL 6 pods must be available - completely blocks draining!
+  selector:
+    matchLabels:
+      app: eks-demo-app
+
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: eks-demo-app-service
+  namespace: default
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval: "5"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout: "3"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
+spec:
+  selector:
+    app: eks-demo-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
