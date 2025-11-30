@@ -8,6 +8,9 @@ This repository contains slides, demos, and other assets for the Kubernetes (KUB
 - [EKS Best Practices Guide](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html?trk=5a5976cd-9bdc-482e-ac5e-e87f626d6658&sc_channel=el) - Build your Amazon EKS knowledge.
 - [Amazon EKS - Knowledge Badge Readiness Path](https://skillbuilder.aws/learning-plan/FRN6Z7KMRY/amazon-eks--knowledge-badge-readiness-path/393YRXJZWC?trk=4e1e6d45-8b48-4ae8-9cd8-01ec40ce8fa3&sc_channel=el) - Earn a badge at the end of this Amazon EKS learning path.
 - [AWS Events Content](https://aws.amazon.com/events/events-content/) - Official content from AWS Events sessions, including slide decks.
+- [Public Containers Roadmap](https://github.com/aws/containers-roadmap?trk=a1c9ffa1-c6d0-4fec-99f8-7ed842fe5a15&sc_channel=el) - Stay up to date with what we're working on and provide feedback.
+- [EKS Blueprints w/ Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints/?trk=4bc267b8-a117-41b2-b7b5-65d9162a8fda&sc_channel=el) - Frameworks and examples for deploying complete clusters for Terraform
+- [EKS Blueprints w/ AWS CDK](https://awslabs.github.io/cdk-eks-blueprints/?trk=d1cf426b-296c-4b5e-96eb-baa2e7739049&sc_channel=el) - Frameworks and examples for deploying complete clusters for AWS CDK
 
 ## Attend an upcoming hands-on EKS Workshop
 
@@ -21,6 +24,7 @@ Discover how you can deploy and scale AI/ML workloads on Amazon EKS.
 
 - [EKS AI/ML Best Practices](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html?trk=5a5976cd-9bdc-482e-ac5e-e87f626d6658&sc_channel=el)
 - [AI on EKS Project](https://awslabs.github.io/ai-on-eks/?trk=9d3947ba-1dd3-447a-9a3f-fd6fcee3fa8d&sc_channel=el)
+- [Date on EKS Project](https://awslabs.github.io/data-on-eks/?trk=1abdf139-b733-4d2a-a50b-6b560a45d8dc&sc_channel=el) 
 
 ## Sessions
 
