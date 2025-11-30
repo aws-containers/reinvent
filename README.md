@@ -24,7 +24,7 @@ Discover how you can deploy and scale AI/ML workloads on Amazon EKS.
 
 - [EKS AI/ML Best Practices](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html?trk=5a5976cd-9bdc-482e-ac5e-e87f626d6658&sc_channel=el)
 - [AI on EKS Project](https://awslabs.github.io/ai-on-eks/?trk=9d3947ba-1dd3-447a-9a3f-fd6fcee3fa8d&sc_channel=el)
-- [Date on EKS Project](https://awslabs.github.io/data-on-eks/?trk=1abdf139-b733-4d2a-a50b-6b560a45d8dc&sc_channel=el) 
+- [Data on EKS Project](https://awslabs.github.io/data-on-eks/?trk=1abdf139-b733-4d2a-a50b-6b560a45d8dc&sc_channel=el) 
 
 ## Sessions
 
