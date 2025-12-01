@@ -4,3 +4,6 @@ In this code talk, learn how to build agentic AI systems that automate Amazon EK
 
 ## Session Resources 
 
+Find the full demo sample code and code walkthrough here:
+[aws-samples/sample-eks-troubleshooting-rag-chatbot:riv2025-initial](https://github.com/aws-samples/sample-eks-troubleshooting-rag-chatbot/blob/riv2025-initial/static/code-session-demo-guide.md)
+
