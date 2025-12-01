@@ -4,3 +4,13 @@ Join this session to learn how to design highly available, resilient Amazon EKS 
 
 ## Session Resources
 
+General resources and best practices
+- [Amazon EKS best practices](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html)
+- [Amazon EKS Reliability best practices](https://docs.aws.amazon.com/eks/latest/best-practices/reliability.html)
+- [Container Resiliency](https://github.com/aws-samples/container-resiliency)
+- [Amazon EKS Blueprints for Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints/)
+- [Amazon EKS Blueprints for CDK](https://github.com/awslabs/cdk-eks-blueprints)
+
+Hands-on workshops
+- [Amazon EKS Workshop](https://eksworkshop.com/)
+- [Building Modern Resilient Applications using Amazon EKS and Amazon EFS](https://catalog.us-east-1.prod.workshops.aws/workshops/731e4034-4681-4277-9bc4-46fafa1199d1)
