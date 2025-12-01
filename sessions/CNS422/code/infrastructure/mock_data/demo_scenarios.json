@@ -1,0 +1,637 @@
+{
+  "demo_scenarios": {
+    "emergency_refrigerator_repair": {
+      "title": "Emergency Refrigerator Repair",
+      "description": "Customer reports refrigerator failure with food spoilage risk - demonstrates emergency claim processing and rapid technician dispatch",
+      "customer_id": "CUST001",
+      "claim_id": "CLAIM001",
+      "appointment_id": "APPT001",
+      "technician_id": "TECH001",
+      "difficulty_level": "beginner",
+      "estimated_duration_minutes": 5,
+      "key_features": [
+        "High urgency claim processing",
+        "Emergency technician dispatch",
+        "Food spoilage coverage",
+        "Premium policy benefits"
+      ],
+      "conversation_starters": [
+        "My refrigerator stopped working overnight and all my food is spoiling!",
+        "I need emergency repair for my fridge - it's not cooling at all",
+        "Help! My refrigerator broke and I have a lot of expensive food inside"
+      ],
+      "expected_outcomes": [
+        "Immediate claim approval",
+        "Same-day technician appointment",
+        "Coverage confirmation with low deductible",
+        "Technician dispatch with ETA"
+      ],
+      "demo_script": {
+        "setup": "Customer Sarah Johnson has a premium policy and her refrigerator failed overnight",
+        "talking_points": [
+          "Show immediate emergency response",
+          "Highlight premium policy benefits",
+          "Demonstrate food spoilage coverage",
+          "Show technician dispatch and tracking"
+        ],
+        "follow_up_questions": [
+          "What's the status of my appointment?",
+          "When will the technician arrive?",
+          "Is my food spoilage covered?"
+        ]
+      }
+    },
+    "standard_washing_machine_repair": {
+      "title": "Standard Washing Machine Repair",
+      "description": "Typical washing machine drain issue - shows standard claim workflow and appointment scheduling",
+      "customer_id": "CUST002",
+      "claim_id": "CLAIM002",
+      "appointment_id": "APPT002",
+      "technician_id": "TECH002",
+      "difficulty_level": "beginner",
+      "estimated_duration_minutes": 4,
+      "key_features": [
+        "Standard claim processing",
+        "Normal appointment scheduling",
+        "Error code diagnosis",
+        "Parts replacement coverage"
+      ],
+      "conversation_starters": [
+        "My washing machine isn't draining water properly",
+        "The washer shows error code E03 and clothes are soaking wet",
+        "I need help with my washing machine - it's not working right"
+      ],
+      "expected_outcomes": [
+        "Claim approval within business hours",
+        "Next available appointment slot",
+        "Standard deductible applied",
+        "Parts and labor coverage confirmed"
+      ],
+      "demo_script": {
+        "setup": "Customer Michael Chen has a standard policy and washing machine drain issues",
+        "talking_points": [
+          "Show standard claim processing workflow",
+          "Demonstrate error code interpretation",
+          "Highlight parts and labor coverage",
+          "Show appointment scheduling flexibility"
+        ],
+        "follow_up_questions": [
+          "Can I reschedule my appointment?",
+          "What parts will be replaced?",
+          "How much will this cost me?"
+        ]
+      }
+    },
+    "safety_microwave_repair": {
+      "title": "Safety Concern - Microwave Sparking",
+      "description": "Microwave safety issue with sparking - demonstrates emergency safety protocols and immediate response",
+      "customer_id": "CUST007",
+      "claim_id": "CLAIM007",
+      "appointment_id": "APPT007",
+      "technician_id": "TECH004",
+      "key_features": [
+        "Safety emergency protocols",
+        "Immediate claim approval",
+        "Safety advisory guidance",
+        "Priority technician dispatch"
+      ],
+      "conversation_starters": [
+        "My microwave is sparking inside - is this dangerous?",
+        "Help! My microwave started sparking and I unplugged it immediately",
+        "I have a safety concern with my microwave - it's making sparks"
+      ],
+      "expected_outcomes": [
+        "Immediate safety advisory",
+        "Emergency claim approval",
+        "Same-day safety repair",
+        "Usage safety instructions"
+      ]
+    },
+    "completed_oven_repair": {
+      "title": "Completed Oven Repair Follow-up",
+      "description": "Follow-up on successfully completed oven repair - shows post-service communication and customer satisfaction",
+      "customer_id": "CUST004",
+      "claim_id": "CLAIM004",
+      "appointment_id": "APPT004",
+      "technician_id": "TECH004",
+      "key_features": [
+        "Service completion confirmation",
+        "Repair summary details",
+        "Warranty information",
+        "Customer satisfaction follow-up"
+      ],
+      "conversation_starters": [
+        "I want to check on my recent oven repair",
+        "How did my oven repair go? Is everything fixed?",
+        "Can you tell me about the work done on my oven?"
+      ],
+      "expected_outcomes": [
+        "Repair completion confirmation",
+        "Detailed service summary",
+        "Parts warranty information",
+        "Service quality verification"
+      ]
+    },
+    "in_progress_service_tracking": {
+      "title": "Live Service Tracking",
+      "description": "Technician currently on-site for garbage disposal repair - demonstrates real-time tracking and status updates",
+      "customer_id": "CUST005",
+      "claim_id": "CLAIM005",
+      "appointment_id": "APPT005",
+      "technician_id": "TECH003",
+      "key_features": [
+        "Real-time technician tracking",
+        "Live service updates",
+        "On-site status monitoring",
+        "Progress communication"
+      ],
+      "conversation_starters": [
+        "What's the status of my garbage disposal repair?",
+        "Is the technician still working on my garbage disposal?",
+        "Can you give me an update on today's service call?"
+      ],
+      "expected_outcomes": [
+        "Current technician location",
+        "Service progress update",
+        "Estimated completion time",
+        "Real-time status information"
+      ]
+    },
+    "appointment_rescheduling": {
+      "title": "Appointment Rescheduling",
+      "description": "Customer needs to reschedule upcoming air conditioner service - shows flexible scheduling options",
+      "customer_id": "CUST006",
+      "claim_id": "CLAIM006",
+      "appointment_id": "APPT006",
+      "technician_id": "TECH005",
+      "key_features": [
+        "Flexible rescheduling options",
+        "Alternative time slots",
+        "Technician availability",
+        "Confirmation updates"
+      ],
+      "conversation_starters": [
+        "I need to reschedule my air conditioner appointment",
+        "Can we change the time for my AC repair?",
+        "I have a conflict with my scheduled appointment - can we move it?"
+      ],
+      "expected_outcomes": [
+        "Current appointment details",
+        "Available alternative slots",
+        "Rescheduling confirmation",
+        "Updated appointment information"
+      ]
+    },
+    "new_claim_submission": {
+      "title": "New Claim Submission",
+      "description": "Customer reporting new dryer issue - demonstrates complete claim intake and processing workflow",
+      "customer_id": "CUST004",
+      "claim_id": "CLAIM012",
+      "appointment_id": null,
+      "technician_id": null,
+      "key_features": [
+        "New claim intake process",
+        "Issue description collection",
+        "Coverage verification",
+        "Initial claim processing"
+      ],
+      "conversation_starters": [
+        "My dryer stopped heating - I need to file a claim",
+        "I think my dryer heating element is broken",
+        "My clothes aren't drying properly - the dryer isn't getting hot"
+      ],
+      "expected_outcomes": [
+        "Claim information collection",
+        "Coverage verification",
+        "Claim submission confirmation",
+        "Next steps explanation"
+      ]
+    },
+    "multiple_appliance_customer": {
+      "title": "Customer with Multiple Appliances",
+      "description": "Customer with comprehensive coverage asking about multiple appliances - shows policy benefits and coverage scope",
+      "customer_id": "CUST005",
+      "claim_id": null,
+      "appointment_id": null,
+      "technician_id": null,
+      "difficulty_level": "intermediate",
+      "estimated_duration_minutes": 3,
+      "key_features": [
+        "Comprehensive policy coverage",
+        "Multiple appliance support",
+        "Premium service benefits",
+        "Policy value demonstration"
+      ],
+      "conversation_starters": [
+        "What appliances are covered under my policy?",
+        "I have the premium plan - what does that include?",
+        "Can you tell me about my coverage for all my appliances?"
+      ],
+      "expected_outcomes": [
+        "Complete coverage overview",
+        "Appliance list confirmation",
+        "Policy benefits explanation",
+        "Service level details"
+      ],
+      "demo_script": {
+        "setup": "Customer Lisa Park has premium plus coverage with comprehensive appliance protection",
+        "talking_points": [
+          "Show comprehensive policy benefits",
+          "Demonstrate zero deductible advantage",
+          "Highlight multiple appliance coverage",
+          "Show policy value proposition"
+        ],
+        "follow_up_questions": [
+          "How do I file a claim for multiple appliances?",
+          "What's my annual coverage limit?",
+          "Do I get priority service?"
+        ]
+      }
+    },
+    "tech_professional_scenario": {
+      "title": "Tech Professional AC Emergency",
+      "description": "Tech professional customer with AC failure during heat wave - shows specialized coverage and priority service",
+      "customer_id": "CUST009",
+      "claim_id": "CLAIM013",
+      "appointment_id": "APPT013",
+      "technician_id": "TECH005",
+      "difficulty_level": "intermediate",
+      "estimated_duration_minutes": 6,
+      "key_features": [
+        "Specialized professional coverage",
+        "Climate emergency response",
+        "Advanced diagnostic capabilities",
+        "Priority technician assignment"
+      ],
+      "conversation_starters": [
+        "My AC system isn't responding to the thermostat and it's getting really hot",
+        "I work from home and need my AC fixed urgently - it's a heat wave",
+        "The central air isn't cooling despite being set correctly"
+      ],
+      "expected_outcomes": [
+        "Priority emergency scheduling",
+        "Professional plan benefits explained",
+        "Advanced diagnostic approach",
+        "Climate-specific coverage confirmation"
+      ],
+      "demo_script": {
+        "setup": "Thomas Anderson is a tech professional in San Francisco with AC failure during heat wave",
+        "talking_points": [
+          "Show professional plan advantages",
+          "Demonstrate climate emergency protocols",
+          "Highlight advanced diagnostic capabilities",
+          "Show priority service benefits"
+        ],
+        "follow_up_questions": [
+          "What makes the tech professional plan different?",
+          "How quickly can someone get here?",
+          "Is this covered under my plan?"
+        ]
+      }
+    },
+    "family_multilingual_support": {
+      "title": "Family with Multilingual Support Needs",
+      "description": "Spanish-speaking family with washing machine issues - demonstrates multilingual support and family-focused service",
+      "customer_id": "CUST010",
+      "claim_id": "CLAIM014",
+      "appointment_id": "APPT014",
+      "technician_id": "TECH002",
+      "difficulty_level": "intermediate",
+      "estimated_duration_minutes": 5,
+      "key_features": [
+        "Multilingual customer support",
+        "Family-focused service approach",
+        "Technician language matching",
+        "Cultural sensitivity"
+      ],
+      "conversation_starters": [
+        "Mi lavadora no est\u00e1 funcionando bien, la ropa no se limpia",
+        "The washing machine agitator isn't working and clothes aren't getting clean",
+        "Necesito ayuda con mi lavadora - no est\u00e1 lavando la ropa correctamente"
+      ],
+      "expected_outcomes": [
+        "Bilingual service confirmation",
+        "Spanish-speaking technician assignment",
+        "Family plan benefits explained",
+        "Cultural accommodation demonstrated"
+      ],
+      "demo_script": {
+        "setup": "Maria Gonzalez has a large family and needs washing machine repair with Spanish language support",
+        "talking_points": [
+          "Show multilingual support capabilities",
+          "Demonstrate family plan benefits",
+          "Highlight technician language matching",
+          "Show cultural sensitivity in service"
+        ],
+        "follow_up_questions": [
+          "\u00bfEl t\u00e9cnico habla espa\u00f1ol?",
+          "Can the technician speak Spanish?",
+          "What's covered under our family plan?"
+        ]
+      }
+    },
+    "medical_professional_priority": {
+      "title": "Medical Professional Equipment Priority",
+      "description": "Doctor with refrigerator storing medical supplies - shows professional priority and specialized needs",
+      "customer_id": "CUST011",
+      "claim_id": "CLAIM015",
+      "appointment_id": "APPT015",
+      "technician_id": "TECH006",
+      "difficulty_level": "advanced",
+      "estimated_duration_minutes": 7,
+      "key_features": [
+        "Medical professional priority",
+        "Specialized equipment handling",
+        "Temperature-sensitive storage",
+        "Professional liability considerations"
+      ],
+      "conversation_starters": [
+        "My refrigerator is making noise and the temperature is fluctuating - I store medical supplies",
+        "I'm a doctor and my fridge temperature is unstable, affecting my medical inventory",
+        "I need urgent repair - my refrigerator stores temperature-sensitive medical supplies"
+      ],
+      "expected_outcomes": [
+        "Medical priority classification",
+        "Specialized handling protocols",
+        "Professional coverage confirmation",
+        "Temperature monitoring solutions"
+      ],
+      "demo_script": {
+        "setup": "Dr. Elizabeth Harper stores medical supplies and needs refrigerator repair with professional priority",
+        "talking_points": [
+          "Show medical professional priority",
+          "Demonstrate specialized equipment handling",
+          "Highlight professional liability coverage",
+          "Show temperature monitoring capabilities"
+        ],
+        "follow_up_questions": [
+          "How do you handle medical equipment repairs?",
+          "Is there coverage for spoiled medical supplies?",
+          "Can you provide temperature monitoring during repair?"
+        ]
+      }
+    },
+    "ultimate_plan_showcase": {
+      "title": "Ultimate Protection Plan Benefits",
+      "description": "Customer with ultimate plan and dishwasher issue - showcases premium benefits and zero deductible",
+      "customer_id": "CUST012",
+      "claim_id": "CLAIM016",
+      "appointment_id": "APPT016",
+      "technician_id": "TECH012",
+      "difficulty_level": "beginner",
+      "estimated_duration_minutes": 4,
+      "key_features": [
+        "Zero deductible benefits",
+        "Ultimate plan advantages",
+        "Comprehensive coverage",
+        "Premium service experience"
+      ],
+      "conversation_starters": [
+        "My dishwasher isn't dispensing detergent properly",
+        "The soap compartment stays closed during wash cycles",
+        "I have the ultimate protection plan - can you help with my dishwasher?"
+      ],
+      "expected_outcomes": [
+        "Zero deductible confirmation",
+        "Ultimate plan benefits explained",
+        "Immediate service approval",
+        "Premium experience demonstration"
+      ],
+      "demo_script": {
+        "setup": "Robert Kim has ultimate protection with zero deductible and dishwasher detergent dispenser issues",
+        "talking_points": [
+          "Show ultimate plan advantages",
+          "Demonstrate zero deductible benefits",
+          "Highlight comprehensive coverage",
+          "Show premium service experience"
+        ],
+        "follow_up_questions": [
+          "What makes the ultimate plan special?",
+          "Do I pay anything for this repair?",
+          "How quickly can this be fixed?"
+        ]
+      }
+    }
+  },
+  "demo_flow_sequences": {
+    "complete_customer_journey": {
+      "title": "Complete Customer Journey Demo",
+      "description": "Full demonstration of customer experience from problem report to service completion",
+      "sequence": [
+        "new_claim_submission",
+        "standard_washing_machine_repair",
+        "in_progress_service_tracking",
+        "completed_oven_repair"
+      ],
+      "duration_minutes": 15,
+      "difficulty_level": "intermediate",
+      "target_audience": "business_stakeholders",
+      "key_talking_points": [
+        "Seamless claim submission process",
+        "Automated technician matching and scheduling",
+        "Real-time service tracking and updates",
+        "Complete service lifecycle management"
+      ],
+      "success_metrics": [
+        "Claim processing time under 2 minutes",
+        "Appointment scheduling within 24 hours",
+        "Real-time status updates",
+        "Customer satisfaction confirmation"
+      ]
+    },
+    "emergency_response_demo": {
+      "title": "Emergency Response Capabilities",
+      "description": "Showcase of emergency handling and rapid response capabilities",
+      "sequence": [
+        "emergency_refrigerator_repair",
+        "safety_microwave_repair",
+        "medical_professional_priority"
+      ],
+      "duration_minutes": 12,
+      "difficulty_level": "beginner",
+      "target_audience": "safety_compliance",
+      "key_talking_points": [
+        "Immediate emergency claim processing",
+        "Safety-first approach to hazardous situations",
+        "Priority technician dispatch",
+        "Customer safety and satisfaction focus"
+      ],
+      "success_metrics": [
+        "Emergency response under 15 minutes",
+        "Safety protocol compliance",
+        "Priority scheduling confirmation",
+        "Risk mitigation demonstration"
+      ]
+    },
+    "service_flexibility_demo": {
+      "title": "Service Flexibility and Customer Control",
+      "description": "Demonstration of scheduling flexibility and customer service options",
+      "sequence": [
+        "appointment_rescheduling",
+        "multiple_appliance_customer",
+        "in_progress_service_tracking"
+      ],
+      "duration_minutes": 10,
+      "difficulty_level": "intermediate",
+      "target_audience": "customer_experience",
+      "key_talking_points": [
+        "Flexible scheduling to meet customer needs",
+        "Comprehensive policy coverage options",
+        "Real-time service visibility and control",
+        "Customer-centric service approach"
+      ],
+      "success_metrics": [
+        "Scheduling flexibility demonstration",
+        "Policy benefits explanation",
+        "Real-time tracking accuracy",
+        "Customer control features"
+      ]
+    },
+    "premium_services_showcase": {
+      "title": "Premium Services and Specialized Coverage",
+      "description": "Highlight premium plan benefits and specialized professional coverage",
+      "sequence": [
+        "tech_professional_scenario",
+        "ultimate_plan_showcase",
+        "medical_professional_priority"
+      ],
+      "duration_minutes": 18,
+      "difficulty_level": "advanced",
+      "target_audience": "sales_premium",
+      "key_talking_points": [
+        "Premium plan value proposition",
+        "Specialized professional coverage",
+        "Zero deductible benefits",
+        "Priority service advantages"
+      ],
+      "success_metrics": [
+        "Premium benefits clearly demonstrated",
+        "Professional coverage explained",
+        "Value proposition articulated",
+        "Competitive advantages shown"
+      ]
+    },
+    "multicultural_accessibility": {
+      "title": "Multicultural and Accessibility Features",
+      "description": "Demonstrate inclusive service approach and accessibility features",
+      "sequence": [
+        "family_multilingual_support",
+        "medical_professional_priority"
+      ],
+      "duration_minutes": 12,
+      "difficulty_level": "intermediate",
+      "target_audience": "diversity_inclusion",
+      "key_talking_points": [
+        "Multilingual support capabilities",
+        "Cultural sensitivity in service",
+        "Accessibility accommodations",
+        "Inclusive customer experience"
+      ],
+      "success_metrics": [
+        "Language support demonstrated",
+        "Cultural accommodation shown",
+        "Accessibility features highlighted",
+        "Inclusive experience confirmed"
+      ]
+    }
+  },
+  "presentation_tips": {
+    "setup_recommendations": [
+      "Start with customer lookup using email or policy number",
+      "Have multiple browser tabs ready for different scenarios",
+      "Prepare realistic customer personas and backstories",
+      "Test all scenarios before presentation",
+      "Prepare backup scenarios in case of technical issues",
+      "Have customer data sheets ready for reference"
+    ],
+    "conversation_techniques": [
+      "Use natural, conversational language",
+      "Demonstrate both simple and complex requests",
+      "Show error handling and edge cases",
+      "Highlight AI understanding and context awareness",
+      "Vary conversation styles (formal, casual, urgent)",
+      "Include follow-up questions to show context retention"
+    ],
+    "key_features_to_highlight": [
+      "Natural language processing and understanding",
+      "Intelligent claim processing and approval",
+      "Real-time technician tracking and updates",
+      "Seamless appointment scheduling and management",
+      "Comprehensive policy coverage verification",
+      "Emergency response and safety protocols",
+      "Multilingual support capabilities",
+      "Professional and specialized coverage options"
+    ],
+    "audience_specific_guidance": {
+      "technical_audience": {
+        "focus_areas": [
+          "MCP server architecture and integration",
+          "AI agent conversation flow management",
+          "Real-time data synchronization",
+          "Error handling and recovery mechanisms"
+        ],
+        "demo_depth": "Show technical implementation details",
+        "questions_to_expect": [
+          "How does the MCP integration work?",
+          "What happens if a server goes down?",
+          "How is conversation context maintained?"
+        ]
+      },
+      "business_audience": {
+        "focus_areas": [
+          "Customer experience improvements",
+          "Operational efficiency gains",
+          "Cost reduction opportunities",
+          "Competitive advantages"
+        ],
+        "demo_depth": "Focus on business value and outcomes",
+        "questions_to_expect": [
+          "What's the ROI on this system?",
+          "How does this improve customer satisfaction?",
+          "What are the operational cost savings?"
+        ]
+      },
+      "sales_audience": {
+        "focus_areas": [
+          "Premium plan differentiation",
+          "Customer value propositions",
+          "Competitive positioning",
+          "Upselling opportunities"
+        ],
+        "demo_depth": "Emphasize customer benefits and plan tiers",
+        "questions_to_expect": [
+          "How do we position premium plans?",
+          "What are the key selling points?",
+          "How does this compare to competitors?"
+        ]
+      }
+    },
+    "troubleshooting_guide": {
+      "common_issues": [
+        {
+          "issue": "AI agent not responding",
+          "solution": "Check MCP server connections and restart if needed",
+          "backup_plan": "Use manual scenario walkthrough"
+        },
+        {
+          "issue": "Incorrect customer data displayed",
+          "solution": "Verify customer ID and reload mock data",
+          "backup_plan": "Use alternative customer scenario"
+        },
+        {
+          "issue": "Appointment scheduling errors",
+          "solution": "Check technician availability data",
+          "backup_plan": "Demonstrate with different time slots"
+        }
+      ],
+      "preparation_checklist": [
+        "Test all demo scenarios 30 minutes before presentation",
+        "Verify mock data is current and realistic",
+        "Check MCP server status and connectivity",
+        "Prepare customer persona reference cards",
+        "Have backup scenarios ready for each demo type",
+        "Test conversation flows with various input styles"
+      ]
+    }
+  }
+}

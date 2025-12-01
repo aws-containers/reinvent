@@ -1,0 +1,400 @@
+{
+  "appointments": [
+    {
+      "id": "APPT001",
+      "customer_id": "CUST001",
+      "technician_id": "TECH001",
+      "appliance_type": "refrigerator",
+      "issue_description": "Refrigerator not cooling properly, temperature fluctuating between 45-50°F",
+      "scheduled_datetime": "2025-12-05T08:00:00",
+      "status": "scheduled",
+      "estimated_duration": 120,
+      "created_at": "2025-11-28T06:00:00",
+      "notes": "Customer mentioned strange noises coming from the compressor area",
+      "claim_id": "CLAIM001",
+      "service_details": {
+        "priority": "high",
+        "parts_needed": [
+          "compressor_relay",
+          "temperature_sensor"
+        ],
+        "estimated_cost": 285.5,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT002",
+      "customer_id": "CUST002",
+      "technician_id": "TECH002",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine not draining water, clothes coming out soaking wet",
+      "scheduled_datetime": "2025-12-06T09:00:00",
+      "status": "confirmed",
+      "estimated_duration": 90,
+      "created_at": "2025-11-28T07:00:00",
+      "notes": "Customer reported error code E03 on display",
+      "claim_id": "CLAIM002",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "drain_pump",
+          "drain_hose"
+        ],
+        "estimated_cost": 165.75,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT003",
+      "customer_id": "CUST003",
+      "technician_id": "TECH002",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher leaving white spots on dishes and not drying properly",
+      "scheduled_datetime": "2025-12-02T10:00:00",
+      "status": "in_progress",
+      "estimated_duration": 75,
+      "created_at": "2025-11-28T08:00:00",
+      "notes": "Technician on site, diagnosing heating element issue. Customer has hard water in area.",
+      "claim_id": "CLAIM003",
+      "service_details": {
+        "priority": "low",
+        "parts_needed": [
+          "rinse_aid_dispenser",
+          "heating_element"
+        ],
+        "estimated_cost": 125.0,
+        "warranty_covered": false
+      }
+    },
+    {
+      "id": "APPT004",
+      "customer_id": "CUST004",
+      "technician_id": "TECH004",
+      "appliance_type": "oven",
+      "issue_description": "Oven not heating evenly, food burning on one side",
+      "scheduled_datetime": "2025-11-18T11:00:00",
+      "status": "completed",
+      "estimated_duration": 105,
+      "created_at": "2025-11-17T09:00:00",
+      "notes": "Service completed successfully. Replaced faulty heating element.",
+      "claim_id": "CLAIM004",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "heating_element",
+          "temperature_probe"
+        ],
+        "estimated_cost": 195.25,
+        "warranty_covered": true,
+        "completion_notes": "Heating element replaced, oven calibrated, tested successfully"
+      }
+    },
+    {
+      "id": "APPT005",
+      "customer_id": "CUST005",
+      "technician_id": "TECH003",
+      "appliance_type": "garbage_disposal",
+      "issue_description": "Garbage disposal making loud grinding noise and not turning on",
+      "scheduled_datetime": "2025-12-02T12:00:00",
+      "status": "in_progress",
+      "estimated_duration": 60,
+      "created_at": "2025-11-18T10:00:00",
+      "notes": "Technician on site, diagnosing motor issue",
+      "claim_id": "CLAIM005",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "motor_assembly",
+          "mounting_hardware"
+        ],
+        "estimated_cost": 145.8,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT006",
+      "customer_id": "CUST006",
+      "technician_id": "TECH005",
+      "appliance_type": "air_conditioner",
+      "issue_description": "AC unit not cooling, blowing warm air despite thermostat setting",
+      "scheduled_datetime": "2025-12-10T13:00:00",
+      "status": "scheduled",
+      "estimated_duration": 150,
+      "created_at": "2025-11-28T11:00:00",
+      "notes": "Customer mentioned unit is 8 years old, may need refrigerant check",
+      "claim_id": "CLAIM006",
+      "service_details": {
+        "priority": "high",
+        "parts_needed": [
+          "refrigerant",
+          "compressor_capacitor"
+        ],
+        "estimated_cost": 325.0,
+        "warranty_covered": false
+      }
+    },
+    {
+      "id": "APPT007",
+      "customer_id": "CUST007",
+      "technician_id": "TECH004",
+      "appliance_type": "microwave",
+      "issue_description": "Microwave turntable not rotating and making sparking sounds",
+      "scheduled_datetime": "2025-12-02T14:00:00",
+      "status": "in_progress",
+      "estimated_duration": 45,
+      "created_at": "2025-11-20T12:00:00",
+      "notes": "Safety concern - customer advised not to use until repair",
+      "claim_id": "CLAIM007",
+      "service_details": {
+        "priority": "high",
+        "parts_needed": [
+          "turntable_motor",
+          "waveguide_cover"
+        ],
+        "estimated_cost": 89.95,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT008",
+      "customer_id": "CUST008",
+      "technician_id": "TECH007",
+      "appliance_type": "water_heater",
+      "issue_description": "Water heater producing lukewarm water, takes very long to heat up",
+      "scheduled_datetime": "2025-12-05T15:00:00",
+      "status": "confirmed",
+      "estimated_duration": 180,
+      "created_at": "2025-11-28T13:00:00",
+      "notes": "Customer reported decreased hot water pressure as well",
+      "claim_id": "CLAIM008",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "heating_element",
+          "thermostat",
+          "anode_rod"
+        ],
+        "estimated_cost": 245.6,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT009",
+      "customer_id": "CUST001",
+      "technician_id": "TECH002",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine vibrating excessively during spin cycle",
+      "scheduled_datetime": "2025-12-02T16:00:00",
+      "status": "in_progress",
+      "estimated_duration": 75,
+      "created_at": "2025-11-15T14:00:00",
+      "notes": "Technician en route, ETA 16:15. Likely unbalanced load or worn shock absorbers.",
+      "claim_id": "CLAIM009",
+      "service_details": {
+        "priority": "low",
+        "parts_needed": [
+          "shock_absorbers",
+          "leveling_feet"
+        ],
+        "estimated_cost": 135.25,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT010",
+      "customer_id": "CUST002",
+      "technician_id": "TECH006",
+      "appliance_type": "refrigerator",
+      "issue_description": "Ice maker not producing ice, water dispenser working fine",
+      "scheduled_datetime": "2025-12-07T17:00:00",
+      "status": "scheduled",
+      "estimated_duration": 90,
+      "created_at": "2025-11-28T15:00:00",
+      "notes": "Customer mentioned ice maker light is on but no ice production for 3 days",
+      "claim_id": "CLAIM010",
+      "service_details": {
+        "priority": "low",
+        "parts_needed": [
+          "ice_maker_assembly",
+          "water_filter"
+        ],
+        "estimated_cost": 175.4,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT011",
+      "customer_id": "CUST003",
+      "technician_id": "TECH004",
+      "appliance_type": "oven",
+      "issue_description": "Oven door not closing properly, heat escaping during cooking",
+      "scheduled_datetime": "2025-12-08T08:00:00",
+      "status": "scheduled",
+      "estimated_duration": 60,
+      "created_at": "2025-11-28T06:00:00",
+      "notes": "Customer can see light around door edges when oven is on",
+      "claim_id": null,
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "door_seal",
+          "door_hinges"
+        ],
+        "estimated_cost": 95.75,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT012",
+      "customer_id": "CUST005",
+      "technician_id": "TECH008",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher not starting, control panel lights up but no water fills",
+      "scheduled_datetime": "2025-11-19T09:00:00",
+      "status": "cancelled",
+      "estimated_duration": 90,
+      "created_at": "2025-11-18T07:00:00",
+      "notes": "Customer cancelled - found issue was tripped circuit breaker",
+      "claim_id": "CLAIM011",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [],
+        "estimated_cost": 0,
+        "warranty_covered": false,
+        "cancellation_reason": "Customer resolved issue independently"
+      }
+    },
+    {
+      "id": "APPT013",
+      "customer_id": "CUST009",
+      "technician_id": "TECH005",
+      "appliance_type": "air_conditioner",
+      "issue_description": "Central AC system not responding to thermostat, no cooling despite proper settings",
+      "scheduled_datetime": "2025-12-10T10:00:00",
+      "status": "scheduled",
+      "estimated_duration": 180,
+      "created_at": "2025-11-28T08:00:00",
+      "notes": "Customer in tech industry, prefers early morning appointments. System is 5 years old.",
+      "claim_id": "CLAIM013",
+      "service_details": {
+        "priority": "high",
+        "parts_needed": [
+          "thermostat_control_board",
+          "refrigerant"
+        ],
+        "estimated_cost": 385.75,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT014",
+      "customer_id": "CUST010",
+      "technician_id": "TECH002",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine agitator not working, clothes not getting clean",
+      "scheduled_datetime": "2025-12-11T11:00:00",
+      "status": "confirmed",
+      "estimated_duration": 90,
+      "created_at": "2025-11-28T09:00:00",
+      "notes": "Large family, needs repair ASAP. Customer speaks Spanish and English.",
+      "claim_id": "CLAIM014",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "agitator_assembly",
+          "drive_belt"
+        ],
+        "estimated_cost": 185.5,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT015",
+      "customer_id": "CUST011",
+      "technician_id": "TECH006",
+      "appliance_type": "refrigerator",
+      "issue_description": "Refrigerator making loud humming noise, temperature inconsistent",
+      "scheduled_datetime": "2025-12-05T12:00:00",
+      "status": "scheduled",
+      "estimated_duration": 120,
+      "created_at": "2025-11-28T10:00:00",
+      "notes": "Medical professional, flexible with timing. Refrigerator stores medical supplies.",
+      "claim_id": "CLAIM015",
+      "service_details": {
+        "priority": "high",
+        "parts_needed": [
+          "compressor_motor",
+          "condenser_fan"
+        ],
+        "estimated_cost": 295.0,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT016",
+      "customer_id": "CUST012",
+      "technician_id": "TECH008",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher not dispensing detergent, soap compartment remains closed",
+      "scheduled_datetime": "2025-12-06T13:00:00",
+      "status": "scheduled",
+      "estimated_duration": 75,
+      "created_at": "2025-11-28T11:00:00",
+      "notes": "Customer has ultimate protection plan, no deductible. Prefers afternoon appointments.",
+      "claim_id": "CLAIM016",
+      "service_details": {
+        "priority": "low",
+        "parts_needed": [
+          "detergent_dispenser",
+          "door_latch_assembly"
+        ],
+        "estimated_cost": 115.25,
+        "warranty_covered": true
+      }
+    },
+    {
+      "id": "APPT017",
+      "customer_id": "CUST013",
+      "technician_id": "TECH002",
+      "appliance_type": "dryer",
+      "issue_description": "Electric dryer overheating, clothes coming out too hot and wrinkled",
+      "scheduled_datetime": "2025-11-17T14:00:00",
+      "status": "in_progress",
+      "estimated_duration": 105,
+      "created_at": "2025-11-16T12:00:00",
+      "notes": "Technician on site, replacing thermostat and cleaning lint buildup.",
+      "claim_id": "CLAIM017",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "thermostat",
+          "thermal_fuse"
+        ],
+        "estimated_cost": 155.8,
+        "warranty_covered": false
+      }
+    },
+    {
+      "id": "APPT018",
+      "customer_id": "CUST014",
+      "technician_id": "TECH007",
+      "appliance_type": "water_heater",
+      "issue_description": "Water heater pilot light keeps going out, no hot water intermittently",
+      "scheduled_datetime": "2025-12-08T15:00:00",
+      "status": "scheduled",
+      "estimated_duration": 150,
+      "created_at": "2025-11-28T13:00:00",
+      "notes": "Desert climate area, gas water heater. Customer works construction, prefers early appointments.",
+      "claim_id": "CLAIM018",
+      "service_details": {
+        "priority": "medium",
+        "parts_needed": [
+          "thermocouple",
+          "gas_valve"
+        ],
+        "estimated_cost": 225.4,
+        "warranty_covered": true
+      }
+    }
+  ]
+}

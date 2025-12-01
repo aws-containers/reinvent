@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technician-server
+  labels:
+    app: technician-server
+    component: backend
+    service: technician
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: technician-server
+  template:
+    metadata:
+      labels:
+        app: technician-server
+        component: backend
+        service: technician
+    spec:
+      containers:
+      - name: technician-server
+        image: technician-server:latest  # Replace with actual image URI during deployment
+        ports:
+        - containerPort: 8003
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8003"
+        - name: HOST
+          value: "0.0.0.0"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      restartPolicy: Always

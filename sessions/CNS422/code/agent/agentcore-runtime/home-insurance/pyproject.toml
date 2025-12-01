@@ -1,0 +1,15 @@
+[project]
+name = "home-insurance"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "bedrock-agentcore>=0.1.7",
+    "boto3>=1.40.52",
+    "strands-agents-tools>=0.2.11",
+    "strands-agents[a2a]>=1.15.0",
+]
+
+[tool.setuptools]
+py-modules = ["home_insurance", "context"]

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-server
+  labels:
+    app: customer-server
+    component: backend
+    service: customer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: customer-server
+  template:
+    metadata:
+      labels:
+        app: customer-server
+        component: backend
+        service: customer
+    spec:
+      containers:
+      - name: customer-server
+        image: customer-server:latest  # Replace with actual image URI during deployment
+        ports:
+        - containerPort: 8001
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8001"
+        - name: HOST
+          value: "0.0.0.0"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      restartPolicy: Always

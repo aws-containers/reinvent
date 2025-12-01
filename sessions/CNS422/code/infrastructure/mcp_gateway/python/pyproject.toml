@@ -1,0 +1,93 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[project]
+name = "agentcore-mcpgateway-infra"
+version = "0.1.0"
+description = "AgentCore MCP Gateway Infra"
+requires-python = ">=3.13"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "bedrock-agentcore>=0.1.5",
+    "bedrock-agentcore-starter-toolkit>=0.1.28",
+    "boto3>=1.40.64",
+    "itsdangerous>=2.2.0",
+    "strands-agents>=1.9.1",
+    "gradio>=5.38.2,<6.0.0",
+    "boto3>=1.39.14,<2.0.0",
+    "fastapi>=0.116.1,<1.0.0",
+    "itsdangerous>=2.2.0,<3.0.0",
+    "uvicorn>=0.35.0,<1.0.0",
+    "authlib>=1.6.1,<2.0.0",
+    "python-dotenv>=1.1.1,<2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+"mcp-gateway-setup"       = "src.setup:main"
+"mcp-gateway-test"        = "src.test_mcp_gateway:main"
+"mcp-gateway-test-connection" = "src.test_connection:main"
+"delete-s3-bucket"        = "src.delete_s3_bucket:main"
+"delete-cognito"          = "src.delete_cognito:main"
+"delete-credential-provider" = "src.delete_credential_provider:main"
+"delete-gateway-targets"  = "src.delete_gateway_targets:main"
+"delete-gateway"          = "src.delete_gateway:main"
+"ui"                      = "src.test_with_ui:main"
+"server"                  = "src.test_server:run_server"
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "mock_data: Mock data validation tests",
+]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+]

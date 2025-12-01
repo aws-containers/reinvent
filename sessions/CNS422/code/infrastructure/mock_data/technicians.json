@@ -1,0 +1,459 @@
+{
+  "technicians": [
+    {
+      "id": "TECH001",
+      "name": "Alex Rodriguez",
+      "specialties": [
+        "refrigerator",
+        "freezer",
+        "ice_maker",
+        "wine_cooler"
+      ],
+      "current_location": [
+        41.8781,
+        -87.6298
+      ],
+      "status": "available",
+      "phone": "555-111-2222",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 8,
+        "certification_level": "Master Technician",
+        "rating": 4.9,
+        "completed_jobs": 1247,
+        "service_area": "Chicago Metro Area",
+        "languages": [
+          "English",
+          "Spanish"
+        ],
+        "working_hours": {
+          "monday": "08:00-17:00",
+          "tuesday": "08:00-17:00",
+          "wednesday": "08:00-17:00",
+          "thursday": "08:00-17:00",
+          "friday": "08:00-17:00",
+          "saturday": "09:00-15:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH002",
+      "name": "Maria Santos",
+      "specialties": [
+        "washing_machine",
+        "dryer",
+        "laundry_center",
+        "dishwasher"
+      ],
+      "current_location": [
+        39.7392,
+        -104.9903
+      ],
+      "status": "en_route",
+      "phone": "555-333-4444",
+      "estimated_arrival": "2025-12-02T10:15:00",
+      "current_appointment_id": "APPT003",
+      "profile": {
+        "years_experience": 6,
+        "certification_level": "Senior Technician",
+        "rating": 4.8,
+        "completed_jobs": 892,
+        "service_area": "Denver Metro Area",
+        "languages": [
+          "English",
+          "Spanish"
+        ],
+        "working_hours": {
+          "monday": "07:30-16:30",
+          "tuesday": "07:30-16:30",
+          "wednesday": "07:30-16:30",
+          "thursday": "07:30-16:30",
+          "friday": "07:30-16:30",
+          "saturday": "08:00-14:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH003",
+      "name": "Kevin Johnson",
+      "specialties": [
+        "dishwasher",
+        "garbage_disposal",
+        "water_heater"
+      ],
+      "current_location": [
+        30.2672,
+        -97.7431
+      ],
+      "status": "on_site",
+      "phone": "555-555-6666",
+      "estimated_arrival": null,
+      "current_appointment_id": "APPT005",
+      "profile": {
+        "years_experience": 12,
+        "certification_level": "Master Technician",
+        "rating": 4.95,
+        "completed_jobs": 2156,
+        "service_area": "Austin Metro Area",
+        "languages": [
+          "English"
+        ],
+        "working_hours": {
+          "monday": "08:00-18:00",
+          "tuesday": "08:00-18:00",
+          "wednesday": "08:00-18:00",
+          "thursday": "08:00-18:00",
+          "friday": "08:00-18:00",
+          "saturday": "09:00-16:00",
+          "sunday": "10:00-14:00"
+        }
+      }
+    },
+    {
+      "id": "TECH004",
+      "name": "Sarah Kim",
+      "specialties": [
+        "oven",
+        "stove",
+        "cooktop",
+        "range_hood",
+        "microwave"
+      ],
+      "current_location": [
+        47.6062,
+        -122.3321
+      ],
+      "status": "available",
+      "phone": "555-777-8888",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 10,
+        "certification_level": "Master Technician",
+        "rating": 4.92,
+        "completed_jobs": 1678,
+        "service_area": "Seattle Metro Area",
+        "languages": [
+          "English",
+          "Korean"
+        ],
+        "working_hours": {
+          "monday": "08:00-17:00",
+          "tuesday": "08:00-17:00",
+          "wednesday": "08:00-17:00",
+          "thursday": "08:00-17:00",
+          "friday": "08:00-17:00",
+          "saturday": "09:00-15:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH005",
+      "name": "Michael Brown",
+      "specialties": [
+        "air_conditioner",
+        "heat_pump",
+        "ventilation"
+      ],
+      "current_location": [
+        33.4484,
+        -112.074
+      ],
+      "status": "busy",
+      "phone": "555-999-0000",
+      "estimated_arrival": null,
+      "current_appointment_id": "APPT007",
+      "profile": {
+        "years_experience": 15,
+        "certification_level": "Master Technician",
+        "rating": 4.88,
+        "completed_jobs": 2834,
+        "service_area": "Phoenix Metro Area",
+        "languages": [
+          "English"
+        ],
+        "working_hours": {
+          "monday": "06:00-16:00",
+          "tuesday": "06:00-16:00",
+          "wednesday": "06:00-16:00",
+          "thursday": "06:00-16:00",
+          "friday": "06:00-16:00",
+          "saturday": "07:00-13:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH006",
+      "name": "Lisa Chen",
+      "specialties": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "microwave"
+      ],
+      "current_location": [
+        42.3601,
+        -71.0589
+      ],
+      "status": "available",
+      "phone": "555-222-3333",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 7,
+        "certification_level": "Senior Technician",
+        "rating": 4.85,
+        "completed_jobs": 1034,
+        "service_area": "Boston Metro Area",
+        "languages": [
+          "English",
+          "Mandarin"
+        ],
+        "working_hours": {
+          "monday": "08:00-17:00",
+          "tuesday": "08:00-17:00",
+          "wednesday": "08:00-17:00",
+          "thursday": "08:00-17:00",
+          "friday": "08:00-17:00",
+          "saturday": "09:00-15:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH007",
+      "name": "Carlos Mendez",
+      "specialties": [
+        "air_conditioner",
+        "refrigerator",
+        "water_heater",
+        "ice_maker"
+      ],
+      "current_location": [
+        25.7617,
+        -80.1918
+      ],
+      "status": "en_route",
+      "phone": "555-444-5555",
+      "estimated_arrival": "2025-12-02T16:15:00",
+      "current_appointment_id": "APPT009",
+      "profile": {
+        "years_experience": 9,
+        "certification_level": "Master Technician",
+        "rating": 4.91,
+        "completed_jobs": 1456,
+        "service_area": "Miami Metro Area",
+        "languages": [
+          "English",
+          "Spanish"
+        ],
+        "working_hours": {
+          "monday": "07:00-17:00",
+          "tuesday": "07:00-17:00",
+          "wednesday": "07:00-17:00",
+          "thursday": "07:00-17:00",
+          "friday": "07:00-17:00",
+          "saturday": "08:00-14:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH008",
+      "name": "Jennifer Taylor",
+      "specialties": [
+        "oven",
+        "dishwasher",
+        "garbage_disposal",
+        "microwave"
+      ],
+      "current_location": [
+        39.9526,
+        -75.1652
+      ],
+      "status": "off_duty",
+      "phone": "555-666-7777",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 5,
+        "certification_level": "Certified Technician",
+        "rating": 4.76,
+        "completed_jobs": 687,
+        "service_area": "Philadelphia Metro Area",
+        "languages": [
+          "English"
+        ],
+        "working_hours": {
+          "monday": "09:00-18:00",
+          "tuesday": "09:00-18:00",
+          "wednesday": "off",
+          "thursday": "09:00-18:00",
+          "friday": "09:00-18:00",
+          "saturday": "10:00-16:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH009",
+      "name": "David Chang",
+      "specialties": [
+        "refrigerator",
+        "freezer",
+        "ice_maker",
+        "wine_cooler",
+        "water_heater"
+      ],
+      "current_location": [
+        37.7749,
+        -122.4194
+      ],
+      "status": "available",
+      "phone": "555-888-9999",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 11,
+        "certification_level": "Master Technician",
+        "rating": 4.93,
+        "completed_jobs": 1823,
+        "service_area": "San Francisco Bay Area",
+        "languages": [
+          "English",
+          "Mandarin",
+          "Cantonese"
+        ],
+        "working_hours": {
+          "monday": "07:00-16:00",
+          "tuesday": "07:00-16:00",
+          "wednesday": "07:00-16:00",
+          "thursday": "07:00-16:00",
+          "friday": "07:00-16:00",
+          "saturday": "08:00-14:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH010",
+      "name": "Rachel Green",
+      "specialties": [
+        "washing_machine",
+        "dryer",
+        "dishwasher",
+        "garbage_disposal"
+      ],
+      "current_location": [
+        34.0522,
+        -118.2437
+      ],
+      "status": "available",
+      "phone": "555-000-1111",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 4,
+        "certification_level": "Certified Technician",
+        "rating": 4.82,
+        "completed_jobs": 567,
+        "service_area": "Los Angeles Metro Area",
+        "languages": [
+          "English",
+          "Spanish"
+        ],
+        "working_hours": {
+          "monday": "08:30-17:30",
+          "tuesday": "08:30-17:30",
+          "wednesday": "off",
+          "thursday": "08:30-17:30",
+          "friday": "08:30-17:30",
+          "saturday": "09:00-15:00",
+          "sunday": "10:00-14:00"
+        }
+      }
+    },
+    {
+      "id": "TECH011",
+      "name": "James Wilson",
+      "specialties": [
+        "air_conditioner",
+        "heat_pump",
+        "ventilation",
+        "water_heater"
+      ],
+      "current_location": [
+        29.7604,
+        -95.3698
+      ],
+      "status": "available",
+      "phone": "555-222-3333",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 13,
+        "certification_level": "Master Technician",
+        "rating": 4.96,
+        "completed_jobs": 2245,
+        "service_area": "Houston Metro Area",
+        "languages": [
+          "English"
+        ],
+        "working_hours": {
+          "monday": "06:00-15:00",
+          "tuesday": "06:00-15:00",
+          "wednesday": "06:00-15:00",
+          "thursday": "06:00-15:00",
+          "friday": "06:00-15:00",
+          "saturday": "07:00-13:00",
+          "sunday": "off"
+        }
+      }
+    },
+    {
+      "id": "TECH012",
+      "name": "Sophie Martinez",
+      "specialties": [
+        "oven",
+        "stove",
+        "cooktop",
+        "microwave",
+        "range_hood"
+      ],
+      "current_location": [
+        45.5152,
+        -122.6784
+      ],
+      "status": "available",
+      "phone": "555-444-5555",
+      "estimated_arrival": null,
+      "current_appointment_id": null,
+      "profile": {
+        "years_experience": 7,
+        "certification_level": "Senior Technician",
+        "rating": 4.87,
+        "completed_jobs": 1156,
+        "service_area": "Portland Metro Area",
+        "languages": [
+          "English",
+          "Spanish",
+          "French"
+        ],
+        "working_hours": {
+          "monday": "08:00-17:00",
+          "tuesday": "08:00-17:00",
+          "wednesday": "08:00-17:00",
+          "thursday": "08:00-17:00",
+          "friday": "08:00-17:00",
+          "saturday": "09:00-15:00",
+          "sunday": "off"
+        }
+      }
+    }
+  ]
+}
