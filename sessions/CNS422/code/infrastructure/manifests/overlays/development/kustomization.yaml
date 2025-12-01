@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference to base configuration
+resources:
+  - ../../base
+
+# Development-specific namespace
+namespace: development
+
+# Development-specific image tags - use ECR repositories with latest tags
+# Note: These placeholders will be replaced by the deployment script with actual values from terraform output
+images:
+  - name: customer-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/customer-server"
+    newTag: latest
+  - name: appointment-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/appointment-server"
+    newTag: latest
+  - name: technician-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/technician-server"
+    newTag: latest
+
+# Development-specific labels
+labels:
+  - pairs:
+      environment: development
+
+# Scale down for development
+replicas:
+  - name: customer-server
+    count: 1
+  - name: appointment-server
+    count: 1
+  - name: technician-server
+    count: 1
+
+# Development-specific name suffix
+nameSuffix: -dev
+
+# Ingress host patches for development
+patchesStrategicMerge:
+  - customer-ingress-patch.yaml
+  - appointment-ingress-patch.yaml
+  - technician-ingress-patch.yaml

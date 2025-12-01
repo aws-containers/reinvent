@@ -1,0 +1,20 @@
+# Example Terraform Variables Configuration
+# Copy this file to terraform.tfvars and customize the values
+
+# Domain Configuration (OPTIONAL - can use DOMAIN_NAME environment variable instead)
+# Uncomment and modify to override the default domain
+# domain_name = "your-domain.com"
+
+# AWS Configuration
+region = "us-west-2"
+
+# EKS Configuration
+cluster_name = "eks-cluster"
+kubernetes_version = "1.33"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+number_availability_zones = 2
+
+# Node Pools Configuration
+node_pools = ["general-purpose", "system"]

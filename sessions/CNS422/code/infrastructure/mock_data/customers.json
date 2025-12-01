@@ -1,0 +1,351 @@
+{
+  "customers": [
+    {
+      "id": "CUST001",
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@email.com",
+      "phone": "555-123-4567",
+      "address": "1234 Maple Street, Springfield, IL 62701",
+      "policy_number": "POL-2024-001",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "oven",
+        "microwave"
+      ],
+      "created_at": "2024-01-15T10:30:00",
+      "policy_details": {
+        "coverage_type": "Premium Home Appliance Protection",
+        "deductible": 50,
+        "annual_limit": 5000,
+        "policy_start": "2024-12-15T00:00:00",
+        "policy_end": "2025-12-15T00:00:00",
+        "monthly_premium": 29.99
+      }
+    },
+    {
+      "id": "CUST002",
+      "name": "Michael Chen",
+      "email": "m.chen@techcorp.com",
+      "phone": "555-987-6543",
+      "address": "567 Oak Avenue, Apartment 3B, Chicago, IL 60601",
+      "policy_number": "POL-2024-002",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "air_conditioner"
+      ],
+      "created_at": "2024-03-22T14:15:00",
+      "policy_details": {
+        "coverage_type": "Standard Home Appliance Protection",
+        "deductible": 75,
+        "annual_limit": 3000,
+        "policy_start": "2024-12-22T00:00:00",
+        "policy_end": "2025-12-22T00:00:00",
+        "monthly_premium": 19.99
+      }
+    },
+    {
+      "id": "CUST003",
+      "name": "Emily Rodriguez",
+      "email": "emily.rodriguez@gmail.com",
+      "phone": "555-456-7890",
+      "address": "890 Pine Road, Austin, TX 78701",
+      "policy_number": "POL-2024-003",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "oven",
+        "microwave",
+        "garbage_disposal",
+        "water_heater"
+      ],
+      "created_at": "2024-02-10T09:45:00",
+      "policy_details": {
+        "coverage_type": "Comprehensive Home Appliance Protection",
+        "deductible": 25,
+        "annual_limit": 7500,
+        "policy_start": "2024-12-10T00:00:00",
+        "policy_end": "2025-12-10T00:00:00",
+        "monthly_premium": 39.99
+      }
+    },
+    {
+      "id": "CUST004",
+      "name": "David Thompson",
+      "email": "david.thompson@outlook.com",
+      "phone": "555-234-5678",
+      "address": "2468 Elm Street, Denver, CO 80202",
+      "policy_number": "POL-2024-004",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "dishwasher",
+        "oven"
+      ],
+      "created_at": "2024-04-05T16:20:00",
+      "policy_details": {
+        "coverage_type": "Basic Home Appliance Protection",
+        "deductible": 100,
+        "annual_limit": 2000,
+        "policy_start": "2025-01-05T00:00:00",
+        "policy_end": "2026-01-05T00:00:00",
+        "monthly_premium": 14.99
+      }
+    },
+    {
+      "id": "CUST005",
+      "name": "Lisa Park",
+      "email": "lisa.park@university.edu",
+      "phone": "555-345-6789",
+      "address": "1357 Cedar Lane, Seattle, WA 98101",
+      "policy_number": "POL-2024-005",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "oven",
+        "microwave",
+        "air_conditioner",
+        "water_heater",
+        "garbage_disposal"
+      ],
+      "created_at": "2024-01-30T11:10:00",
+      "policy_details": {
+        "coverage_type": "Premium Plus Home Appliance Protection",
+        "deductible": 0,
+        "annual_limit": 10000,
+        "policy_start": "2024-12-30T00:00:00",
+        "policy_end": "2025-12-30T00:00:00",
+        "monthly_premium": 49.99
+      }
+    },
+    {
+      "id": "CUST006",
+      "name": "Robert Williams",
+      "email": "rob.williams@construction.com",
+      "phone": "555-567-8901",
+      "address": "3691 Birch Boulevard, Phoenix, AZ 85001",
+      "policy_number": "POL-2024-006",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "air_conditioner"
+      ],
+      "created_at": "2024-05-12T13:30:00",
+      "policy_details": {
+        "coverage_type": "Essential Home Appliance Protection",
+        "deductible": 125,
+        "annual_limit": 1500,
+        "policy_start": "2025-01-12T00:00:00",
+        "policy_end": "2026-01-12T00:00:00",
+        "monthly_premium": 12.99
+      }
+    },
+    {
+      "id": "CUST007",
+      "name": "Jennifer Davis",
+      "email": "jennifer.davis@healthcare.org",
+      "phone": "555-678-9012",
+      "address": "7410 Willow Way, Boston, MA 02101",
+      "policy_number": "POL-2024-007",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "dishwasher",
+        "oven",
+        "microwave"
+      ],
+      "created_at": "2024-03-08T08:25:00",
+      "policy_details": {
+        "coverage_type": "Standard Plus Home Appliance Protection",
+        "deductible": 60,
+        "annual_limit": 4000,
+        "policy_start": "2024-12-08T00:00:00",
+        "policy_end": "2025-12-08T00:00:00",
+        "monthly_premium": 24.99
+      }
+    },
+    {
+      "id": "CUST008",
+      "name": "James Martinez",
+      "email": "james.martinez@finance.com",
+      "phone": "555-789-0123",
+      "address": "8520 Spruce Street, Miami, FL 33101",
+      "policy_number": "POL-2024-008",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "air_conditioner",
+        "water_heater"
+      ],
+      "created_at": "2024-02-28T15:45:00",
+      "policy_details": {
+        "coverage_type": "Tropical Climate Protection Plan",
+        "deductible": 40,
+        "annual_limit": 6000,
+        "policy_start": "2025-01-28T00:00:00",
+        "policy_end": "2026-01-28T00:00:00",
+        "monthly_premium": 34.99
+      }
+    },
+    {
+      "id": "CUST009",
+      "name": "Thomas Anderson",
+      "email": "thomas.anderson@matrix.com",
+      "phone": "555-890-1234",
+      "address": "101 Binary Boulevard, San Francisco, CA 94102",
+      "policy_number": "POL-2024-009",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "dishwasher",
+        "oven",
+        "microwave",
+        "air_conditioner"
+      ],
+      "created_at": "2024-06-15T12:00:00",
+      "policy_details": {
+        "coverage_type": "Tech Professional Protection Plan",
+        "deductible": 35,
+        "annual_limit": 8000,
+        "policy_start": "2024-06-15T00:00:00",
+        "policy_end": "2025-06-15T00:00:00",
+        "monthly_premium": 42.99
+      }
+    },
+    {
+      "id": "CUST010",
+      "name": "Maria Gonzalez",
+      "email": "maria.gonzalez@familia.net",
+      "phone": "555-012-3456",
+      "address": "456 Sunshine Drive, Los Angeles, CA 90210",
+      "policy_number": "POL-2024-010",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "oven",
+        "microwave",
+        "air_conditioner",
+        "water_heater"
+      ],
+      "created_at": "2024-07-20T15:30:00",
+      "policy_details": {
+        "coverage_type": "Family Home Protection Plus",
+        "deductible": 45,
+        "annual_limit": 6500,
+        "policy_start": "2024-07-20T00:00:00",
+        "policy_end": "2025-07-20T00:00:00",
+        "monthly_premium": 36.99
+      }
+    },
+    {
+      "id": "CUST011",
+      "name": "Dr. Elizabeth Harper",
+      "email": "e.harper@medicalpractice.org",
+      "phone": "555-234-5678",
+      "address": "789 Medical Center Way, Houston, TX 77001",
+      "policy_number": "POL-2024-011",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dishwasher",
+        "oven",
+        "microwave",
+        "garbage_disposal"
+      ],
+      "created_at": "2024-08-10T09:45:00",
+      "policy_details": {
+        "coverage_type": "Professional Standard Protection",
+        "deductible": 65,
+        "annual_limit": 4500,
+        "policy_start": "2024-08-10T00:00:00",
+        "policy_end": "2025-08-10T00:00:00",
+        "monthly_premium": 27.99
+      }
+    },
+    {
+      "id": "CUST012",
+      "name": "Robert Kim",
+      "email": "robert.kim@startup.io",
+      "phone": "555-345-6789",
+      "address": "321 Innovation Street, Portland, OR 97201",
+      "policy_number": "POL-2024-012",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "dishwasher",
+        "oven",
+        "microwave",
+        "air_conditioner",
+        "water_heater",
+        "garbage_disposal"
+      ],
+      "created_at": "2024-09-05T14:20:00",
+      "policy_details": {
+        "coverage_type": "Ultimate Home Appliance Protection",
+        "deductible": 0,
+        "annual_limit": 12000,
+        "policy_start": "2024-09-05T00:00:00",
+        "policy_end": "2025-09-05T00:00:00",
+        "monthly_premium": 59.99
+      }
+    },
+    {
+      "id": "CUST013",
+      "name": "Amanda Foster",
+      "email": "amanda.foster@realestate.com",
+      "phone": "555-456-7890",
+      "address": "654 Suburban Lane, Atlanta, GA 30301",
+      "policy_number": "POL-2024-013",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "dryer",
+        "oven",
+        "air_conditioner"
+      ],
+      "created_at": "2024-10-12T11:15:00",
+      "policy_details": {
+        "coverage_type": "Basic Home Essentials Protection",
+        "deductible": 85,
+        "annual_limit": 2500,
+        "policy_start": "2024-10-12T00:00:00",
+        "policy_end": "2025-10-12T00:00:00",
+        "monthly_premium": 18.99
+      }
+    },
+    {
+      "id": "CUST014",
+      "name": "Carlos Rivera",
+      "email": "carlos.rivera@construction.biz",
+      "phone": "555-567-8901",
+      "address": "987 Industrial Park Road, Las Vegas, NV 89101",
+      "policy_number": "POL-2024-014",
+      "covered_appliances": [
+        "refrigerator",
+        "washing_machine",
+        "air_conditioner",
+        "water_heater"
+      ],
+      "created_at": "2024-11-18T16:45:00",
+      "policy_details": {
+        "coverage_type": "Desert Climate Protection Plan",
+        "deductible": 55,
+        "annual_limit": 3500,
+        "policy_start": "2024-11-18T00:00:00",
+        "policy_end": "2025-11-18T00:00:00",
+        "monthly_premium": 25.99
+      }
+    }
+  ]
+}

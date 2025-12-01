@@ -1,0 +1,493 @@
+{
+  "claims": [
+    {
+      "id": "CLAIM001",
+      "customer_id": "CUST001",
+      "appliance_type": "refrigerator",
+      "issue_description": "Refrigerator stopped cooling overnight, all food spoiling. Compressor making loud noises before failing completely.",
+      "status": "approved",
+      "urgency_level": "high",
+      "created_at": "2025-11-07T02:31:25",
+      "approved_at": "2025-11-07T03:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT001",
+      "estimated_cost": 285.5,
+      "notes": "Emergency repair approved due to food spoilage risk. Customer has premium coverage.",
+      "claim_details": {
+        "appliance_age": "3 years",
+        "purchase_date": "2022-01-15",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Compressor failure, temperature sensor malfunction",
+        "coverage_verification": "Fully covered under premium plan",
+        "deductible_applied": 50.0,
+        "claim_photos": [
+          "compressor_damage.jpg",
+          "temperature_display.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM002",
+      "customer_id": "CUST002",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine drain pump failed, water backing up into laundry room. Error code E03 displayed.",
+      "status": "approved",
+      "urgency_level": "medium",
+      "created_at": "2025-11-08T03:31:25",
+      "approved_at": "2025-11-08T05:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT002",
+      "estimated_cost": 165.75,
+      "notes": "Standard repair covered under policy. Customer reported issue promptly.",
+      "claim_details": {
+        "appliance_age": "2 years",
+        "purchase_date": "2023-03-10",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Drain pump motor failure, clogged drain hose",
+        "coverage_verification": "Covered under standard plan",
+        "deductible_applied": 75.0,
+        "claim_photos": [
+          "error_code_display.jpg",
+          "water_backup.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM003",
+      "customer_id": "CUST003",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher not cleaning dishes properly, leaving food residue and water spots. Heating element appears to be malfunctioning.",
+      "status": "approved",
+      "urgency_level": "low",
+      "created_at": "2025-11-09T04:31:25",
+      "approved_at": "2025-11-09T07:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT003",
+      "estimated_cost": 125.0,
+      "notes": "Non-emergency repair. Customer has comprehensive coverage with low deductible.",
+      "claim_details": {
+        "appliance_age": "4 years",
+        "purchase_date": "2021-02-20",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 2,
+        "damage_assessment": "Heating element failure, rinse aid dispenser clogged",
+        "coverage_verification": "Covered under comprehensive plan",
+        "deductible_applied": 25.0,
+        "claim_photos": [
+          "dirty_dishes.jpg",
+          "water_spots.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM004",
+      "customer_id": "CUST004",
+      "appliance_type": "oven",
+      "issue_description": "Electric oven heating unevenly, burning food on left side while right side remains undercooked. Temperature probe may be faulty.",
+      "status": "completed",
+      "urgency_level": "medium",
+      "created_at": "2025-11-10T05:31:25",
+      "approved_at": "2025-11-10T09:31:25",
+      "completed_at": "2025-11-18T05:31:25",
+      "appointment_id": "APPT004",
+      "estimated_cost": 195.25,
+      "notes": "Repair completed successfully. Heating element and temperature probe replaced.",
+      "claim_details": {
+        "appliance_age": "5 years",
+        "purchase_date": "2020-04-12",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Lower heating element burned out, temperature probe calibration off",
+        "coverage_verification": "Covered under basic plan",
+        "deductible_applied": 100.0,
+        "claim_photos": [
+          "uneven_cooking.jpg",
+          "heating_element.jpg"
+        ],
+        "completion_notes": "Both heating elements tested, oven recalibrated to proper temperature"
+      }
+    },
+    {
+      "id": "CLAIM005",
+      "customer_id": "CUST005",
+      "appliance_type": "garbage_disposal",
+      "issue_description": "Garbage disposal motor seized up, making grinding noise when switch is turned on. Unit not grinding food waste.",
+      "status": "approved",
+      "urgency_level": "medium",
+      "created_at": "2025-11-11T06:31:25",
+      "approved_at": "2025-11-11T07:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT005",
+      "estimated_cost": 145.8,
+      "notes": "Motor replacement needed. Customer has premium plus coverage with no deductible.",
+      "claim_details": {
+        "appliance_age": "6 years",
+        "purchase_date": "2019-01-30",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Motor assembly failure, internal grinding mechanism jammed",
+        "coverage_verification": "Fully covered under premium plus plan",
+        "deductible_applied": 0.0,
+        "claim_photos": [
+          "disposal_unit.jpg",
+          "motor_damage.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM006",
+      "customer_id": "CUST006",
+      "appliance_type": "air_conditioner",
+      "issue_description": "Central air conditioning unit not cooling house, blowing warm air. Compressor not engaging properly.",
+      "status": "under_review",
+      "urgency_level": "high",
+      "created_at": "2025-11-12T07:31:25",
+      "approved_at": null,
+      "completed_at": null,
+      "appointment_id": null,
+      "estimated_cost": 325.0,
+      "notes": "Claim under review - unit is 8 years old, checking coverage limits and exclusions.",
+      "claim_details": {
+        "appliance_age": "8 years",
+        "purchase_date": "2017-05-12",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 3,
+        "damage_assessment": "Compressor failure suspected, refrigerant leak possible",
+        "coverage_verification": "Under review - age limit considerations",
+        "deductible_applied": 125.0,
+        "claim_photos": [
+          "ac_unit_exterior.jpg",
+          "thermostat_reading.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM007",
+      "customer_id": "CUST007",
+      "appliance_type": "microwave",
+      "issue_description": "Microwave sparking inside chamber, turntable not rotating. Safety concern - unit unplugged immediately.",
+      "status": "approved",
+      "urgency_level": "emergency",
+      "created_at": "2025-11-13T08:31:25",
+      "approved_at": "2025-11-13T11:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT007",
+      "estimated_cost": 89.95,
+      "notes": "Emergency safety repair approved immediately. Customer advised not to use unit.",
+      "claim_details": {
+        "appliance_age": "3 years",
+        "purchase_date": "2022-03-08",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Waveguide cover damaged, turntable motor failure",
+        "coverage_verification": "Covered under standard plus plan",
+        "deductible_applied": 60.0,
+        "claim_photos": [
+          "sparking_damage.jpg",
+          "turntable_issue.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM008",
+      "customer_id": "CUST008",
+      "appliance_type": "water_heater",
+      "issue_description": "Electric water heater not heating water to proper temperature, lukewarm water only. Possible heating element failure.",
+      "status": "approved",
+      "urgency_level": "medium",
+      "created_at": "2025-11-07T09:31:25",
+      "approved_at": "2025-11-07T13:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT008",
+      "estimated_cost": 245.6,
+      "notes": "Standard water heater repair covered. Customer in Miami area with tropical climate plan.",
+      "claim_details": {
+        "appliance_age": "4 years",
+        "purchase_date": "2021-02-28",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Upper heating element failure, thermostat calibration needed",
+        "coverage_verification": "Covered under tropical climate plan",
+        "deductible_applied": 40.0,
+        "claim_photos": [
+          "water_heater_unit.jpg",
+          "temperature_test.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM009",
+      "customer_id": "CUST001",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine vibrating violently during spin cycle, moving across laundry room floor. Possible shock absorber failure.",
+      "status": "approved",
+      "urgency_level": "low",
+      "created_at": "2025-11-08T10:31:25",
+      "approved_at": "2025-11-08T11:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT009",
+      "estimated_cost": 135.25,
+      "notes": "Non-urgent repair. Customer has multiple appliances covered under premium plan.",
+      "claim_details": {
+        "appliance_age": "5 years",
+        "purchase_date": "2020-01-15",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 2,
+        "damage_assessment": "Shock absorbers worn out, leveling feet adjustment needed",
+        "coverage_verification": "Covered under premium plan",
+        "deductible_applied": 50.0,
+        "claim_photos": [
+          "vibration_damage.jpg",
+          "washer_position.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM010",
+      "customer_id": "CUST002",
+      "appliance_type": "refrigerator",
+      "issue_description": "Ice maker stopped producing ice three days ago, water dispenser still functional. Ice maker light indicates it's on but no ice production.",
+      "status": "approved",
+      "urgency_level": "low",
+      "created_at": "2025-11-09T11:31:25",
+      "approved_at": "2025-11-09T13:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT010",
+      "estimated_cost": 175.4,
+      "notes": "Ice maker repair covered. Non-essential function, scheduled for next available slot.",
+      "claim_details": {
+        "appliance_age": "2 years",
+        "purchase_date": "2023-03-22",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Ice maker assembly malfunction, water filter may need replacement",
+        "coverage_verification": "Covered under standard plan",
+        "deductible_applied": 75.0,
+        "claim_photos": [
+          "ice_maker_empty.jpg",
+          "control_panel.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM011",
+      "customer_id": "CUST005",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher not starting when button pressed, control panel lights up but no water fills or motor sounds.",
+      "status": "rejected",
+      "urgency_level": "medium",
+      "created_at": "2025-11-10T12:31:25",
+      "approved_at": null,
+      "completed_at": "2025-11-12T12:31:25",
+      "appointment_id": null,
+      "estimated_cost": 0,
+      "notes": "Claim rejected - customer found tripped circuit breaker was the cause. No appliance malfunction.",
+      "claim_details": {
+        "appliance_age": "1 year",
+        "purchase_date": "2024-01-30",
+        "warranty_status": "manufacturer_active",
+        "previous_repairs": 0,
+        "damage_assessment": "No appliance damage - electrical supply issue",
+        "coverage_verification": "Not applicable - no appliance failure",
+        "deductible_applied": 0.0,
+        "claim_photos": [],
+        "rejection_reason": "Issue resolved by customer - electrical supply problem, not appliance malfunction"
+      }
+    },
+    {
+      "id": "CLAIM012",
+      "customer_id": "CUST004",
+      "appliance_type": "dryer",
+      "issue_description": "Electric dryer not heating, clothes coming out damp after full cycle. Heating element suspected to be burned out.",
+      "status": "submitted",
+      "urgency_level": "medium",
+      "created_at": "2025-11-11T13:31:25",
+      "approved_at": null,
+      "completed_at": null,
+      "appointment_id": null,
+      "estimated_cost": null,
+      "notes": "New claim submitted, awaiting initial review and coverage verification.",
+      "claim_details": {
+        "appliance_age": "4 years",
+        "purchase_date": "2021-04-05",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Pending technician evaluation",
+        "coverage_verification": "Under review",
+        "deductible_applied": null,
+        "claim_photos": [
+          "dryer_controls.jpg",
+          "damp_clothes.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM013",
+      "customer_id": "CUST009",
+      "appliance_type": "air_conditioner",
+      "issue_description": "Central air conditioning system not responding to thermostat commands, no cooling despite proper temperature settings and power supply.",
+      "status": "approved",
+      "urgency_level": "high",
+      "created_at": "2025-11-12T02:31:25",
+      "approved_at": "2025-11-12T03:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT013",
+      "estimated_cost": 385.75,
+      "notes": "High priority due to California heat wave. Customer has tech professional plan with extended coverage.",
+      "claim_details": {
+        "appliance_age": "5 years",
+        "purchase_date": "2020-06-15",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Thermostat control board failure, possible refrigerant leak",
+        "coverage_verification": "Covered under tech professional plan",
+        "deductible_applied": 35.0,
+        "claim_photos": [
+          "thermostat_display.jpg",
+          "ac_unit_exterior.jpg",
+          "control_board.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM014",
+      "customer_id": "CUST010",
+      "appliance_type": "washing_machine",
+      "issue_description": "Washing machine agitator not functioning properly, clothes not getting adequately cleaned despite full wash cycles.",
+      "status": "approved",
+      "urgency_level": "medium",
+      "created_at": "2025-11-13T03:31:25",
+      "approved_at": "2025-11-13T05:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT014",
+      "estimated_cost": 185.5,
+      "notes": "Family with children needs washing machine operational. Customer prefers Spanish-speaking technician.",
+      "claim_details": {
+        "appliance_age": "3 years",
+        "purchase_date": "2022-07-20",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Agitator assembly worn out, drive belt may need replacement",
+        "coverage_verification": "Covered under family home protection plus",
+        "deductible_applied": 45.0,
+        "claim_photos": [
+          "agitator_issue.jpg",
+          "wash_results.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM015",
+      "customer_id": "CUST011",
+      "appliance_type": "refrigerator",
+      "issue_description": "Refrigerator producing excessive noise and temperature fluctuations affecting medical supply storage requirements.",
+      "status": "approved",
+      "urgency_level": "high",
+      "created_at": "2025-11-07T04:31:25",
+      "approved_at": "2025-11-07T07:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT015",
+      "estimated_cost": 295.0,
+      "notes": "Priority repair due to medical supply storage needs. Professional standard protection covers medical use cases.",
+      "claim_details": {
+        "appliance_age": "4 years",
+        "purchase_date": "2021-08-10",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Compressor motor bearing failure, condenser fan motor issues",
+        "coverage_verification": "Covered under professional standard protection",
+        "deductible_applied": 65.0,
+        "claim_photos": [
+          "temperature_log.jpg",
+          "compressor_noise.mp4",
+          "medical_supplies.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM016",
+      "customer_id": "CUST012",
+      "appliance_type": "dishwasher",
+      "issue_description": "Dishwasher detergent dispenser not opening during wash cycle, dishes not getting properly cleaned.",
+      "status": "approved",
+      "urgency_level": "low",
+      "created_at": "2025-11-08T05:31:25",
+      "approved_at": "2025-11-08T09:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT016",
+      "estimated_cost": 115.25,
+      "notes": "Non-urgent repair. Customer has ultimate protection plan with zero deductible.",
+      "claim_details": {
+        "appliance_age": "2 years",
+        "purchase_date": "2023-09-05",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 0,
+        "damage_assessment": "Detergent dispenser mechanism jammed, door latch sensor malfunction",
+        "coverage_verification": "Fully covered under ultimate protection plan",
+        "deductible_applied": 0.0,
+        "claim_photos": [
+          "dispenser_closed.jpg",
+          "soap_residue.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM017",
+      "customer_id": "CUST013",
+      "appliance_type": "dryer",
+      "issue_description": "Electric dryer overheating clothes, causing damage to fabrics and potential fire hazard.",
+      "status": "approved",
+      "urgency_level": "high",
+      "created_at": "2025-11-09T06:31:25",
+      "approved_at": "2025-11-09T07:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT017",
+      "estimated_cost": 155.8,
+      "notes": "Safety concern addressed immediately. Customer advised not to use dryer until repair completed.",
+      "claim_details": {
+        "appliance_age": "6 years",
+        "purchase_date": "2019-10-12",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 2,
+        "damage_assessment": "Thermostat failure causing overheating, thermal fuse blown",
+        "coverage_verification": "Partially covered - age limit considerations apply",
+        "deductible_applied": 85.0,
+        "claim_photos": [
+          "overheated_clothes.jpg",
+          "thermostat_reading.jpg",
+          "lint_buildup.jpg"
+        ]
+      }
+    },
+    {
+      "id": "CLAIM018",
+      "customer_id": "CUST014",
+      "appliance_type": "water_heater",
+      "issue_description": "Gas water heater pilot light intermittently going out, resulting in inconsistent hot water supply.",
+      "status": "approved",
+      "urgency_level": "medium",
+      "created_at": "2025-11-10T07:31:25",
+      "approved_at": "2025-11-10T09:31:25",
+      "completed_at": null,
+      "appointment_id": "APPT018",
+      "estimated_cost": 225.4,
+      "notes": "Desert climate plan covers gas appliance issues. Customer works early hours, prefers morning appointments.",
+      "claim_details": {
+        "appliance_age": "7 years",
+        "purchase_date": "2018-11-18",
+        "warranty_status": "manufacturer_expired",
+        "previous_repairs": 1,
+        "damage_assessment": "Thermocouple sensor failure, gas valve control issues",
+        "coverage_verification": "Covered under desert climate protection plan",
+        "deductible_applied": 55.0,
+        "claim_photos": [
+          "pilot_light.jpg",
+          "gas_valve.jpg",
+          "temperature_test.jpg"
+        ]
+      }
+    }
+  ]
+}

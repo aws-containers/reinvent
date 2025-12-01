@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base resources to include
+resources:
+  - customer-server/deployment.yaml
+  - customer-server/service.yaml
+  - customer-server/ingress.yaml
+  - appointment-server/deployment.yaml
+  - appointment-server/service.yaml
+  - appointment-server/ingress.yaml
+  - technician-server/deployment.yaml
+  - technician-server/service.yaml
+  - technician-server/ingress.yaml
+
+# Common labels applied to all resources
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: insurance-agent-demo
+      app.kubernetes.io/managed-by: kustomize
+
+# Image overrides - reference ECR repositories
+# Note: Replace {ACCOUNT_ID} and {REGION} with actual values from terraform output
+images:
+  - name: customer-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/customer-server"
+    newTag: latest
+  - name: appointment-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/appointment-server"
+    newTag: latest
+  - name: technician-server:latest
+    newName: "{ACCOUNT_ID}.dkr.ecr.{REGION}.amazonaws.com/agentcore-gateway/technician-server"
+    newTag: latest
+
+# Namespace for all resources (can be overridden)
+namespace: default
+
+# Resource name prefix (optional)
+namePrefix: ""
+
+# Resource name suffix (optional)
+nameSuffix: ""
+
+# Replica count overrides (can be used to scale all services)
+replicas:
+  - name: customer-server
+    count: 2
+  - name: appointment-server
+    count: 2
+  - name: technician-server
+    count: 2

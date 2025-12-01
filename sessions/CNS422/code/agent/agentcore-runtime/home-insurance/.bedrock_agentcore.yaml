@@ -1,0 +1,55 @@
+default_agent: home_insurance
+agents:
+  home_insurance:
+    name: home_insurance
+    entrypoint: /Users/carrlos/dev/eks/agentcore-gateway-amazon-eks-modernization/agent/agentcore-runtime/home-insurance/home_insurance.py
+    deployment_type: container
+    runtime_type: null
+    platform: linux/arm64
+    container_runtime: none
+    source_path: /Users/carrlos/dev/eks/agentcore-gateway-amazon-eks-modernization/agent/agentcore-runtime/home-insurance
+    aws:
+      execution_role: arn:aws:iam::210066870173:role/AmazonBedrockAgentCoreSDKRuntime-us-west-2-e20ee1a2e0
+      execution_role_auto_create: false
+      account: '210066870173'
+      region: us-west-2
+      ecr_repository: 210066870173.dkr.ecr.us-west-2.amazonaws.com/bedrock-agentcore-home_insurance
+      ecr_auto_create: false
+      s3_path: null
+      s3_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: A2A
+      observability:
+        enabled: true
+      lifecycle_configuration:
+        idle_runtime_session_timeout: null
+        max_lifetime: null
+    bedrock_agentcore:
+      agent_id: home_insurance-6SBRb6FfoM
+      agent_arn: arn:aws:bedrock-agentcore:us-west-2:210066870173:runtime/home_insurance-6SBRb6FfoM
+      agent_session_id: null
+    codebuild:
+      project_name: bedrock-agentcore-home_insurance-builder
+      execution_role: arn:aws:iam::210066870173:role/AmazonBedrockAgentCoreSDKCodeBuild-us-west-2-e20ee1a2e0
+      source_bucket: bedrock-agentcore-codebuild-sources-210066870173-us-west-2
+    memory:
+      mode: STM_ONLY
+      memory_id: home_insurance_mem-lQ5ddZCAS8
+      memory_arn: arn:aws:bedrock-agentcore:us-west-2:210066870173:memory/home_insurance_mem-lQ5ddZCAS8
+      memory_name: home_insurance_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: true
+      was_created_by_toolkit: true
+    identity:
+      credential_providers: []
+      workload: null
+    authorizer_configuration:
+      customJWTAuthorizer:
+        discoveryUrl: https://cognito-idp.us-west-2.amazonaws.com/us-west-2_xCU7B92vB/.well-known/openid-configuration
+        allowedClients:
+        - 4p5eg0cmis5miaa5gebpd063kl
+    request_header_configuration: null
+    oauth_configuration: null

@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: appointment-server-ingress
+spec:
+  rules:
+    - host: appointment.your-domain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: appointment-server-service
+                port:
+                  number: 8002
