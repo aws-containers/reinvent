@@ -4,11 +4,11 @@ Is your Amazon EKS environment following security best practices? This session s
 
 ## Session Resources 
 
-[EKS Security best practices](https://docs.aws.amazon.com/eks/latest/best-practices/security.html)
-[Deepdive into EKS Access Entries] (https://aws.amazon.com/blogs/containers/a-deep-dive-into-simplified-amazon-eks-access-management-controls/)
-[Deepdive into EKS Pod Identities] (https://aws.amazon.com/blogs/containers/amazon-eks-pod-identity-a-new-way-for-applications-on-eks-to-obtain-iam-credentials/)
-[EKS Pod Identity Cross Account Access] (https://aws.amazon.com/blogs/containers/amazon-eks-pod-identity-streamlines-cross-account-access/)
-[AWS Outbound Identity Federation] (https://aws.amazon.com/blogs/aws/simplify-access-to-external-services-using-aws-iam-outbound-identity-federation)
+* [EKS Security best practices](https://docs.aws.amazon.com/eks/latest/best-practices/security.html)
+* [Deepdive into EKS Access Entries] (https://aws.amazon.com/blogs/containers/a-deep-dive-into-simplified-amazon-eks-access-management-controls/)
+* [Deepdive into EKS Pod Identities] (https://aws.amazon.com/blogs/containers/amazon-eks-pod-identity-a-new-way-for-applications-on-eks-to-obtain-iam-credentials/)
+* [EKS Pod Identity Cross Account Access] (https://aws.amazon.com/blogs/containers/amazon-eks-pod-identity-streamlines-cross-account-access/)
+* [AWS Outbound Identity Federation] (https://aws.amazon.com/blogs/aws/simplify-access-to-external-services-using-aws-iam-outbound-identity-federation)
 
-Hands On Workshop
+### Hands On Workshop
 [EKS Workshop Security Modules] (https://eksworkshop.com/docs/security/)
