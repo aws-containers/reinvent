@@ -9,5 +9,4 @@ Amazon EKS Auto Mode fully automates Kubernetes cluster management for compute, 
 
 ## Session Resources
 
-
-
+[Download Session Materials (PDF)](./CNS354%20-%20Amazon%20EKS%20Auto%20Mode.pdf)
