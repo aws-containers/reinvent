@@ -11,9 +11,6 @@
 - [Amazon EKS Best Practices Guide](https://docs.aws.amazon.com/eks/latest/best-practices/introduction.html)
 - [EKS Workshop](https://www.eksworkshop.com/)
 
-## Related services and tools
-- [AI on EKS](https://awslabs.github.io/ai-on-eks/)
-
 ## More from AWS Containers
 - [AWS Containers blog](https://aws.amazon.com/blogs/containers/)
 - [AWS Containers public roadmap](https://github.com/aws/containers-roadmap)

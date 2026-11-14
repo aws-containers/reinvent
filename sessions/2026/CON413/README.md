@@ -1,4 +1,4 @@
-# CON413 — Scale financial Risk and Quant Research with AWS Batch and Amazon ECS
+# CON413 — Scale financial risk simulations with AWS Batch and Amazon ECS
 
 **AWS re:Invent 2026** · Chalk Talk · 400 - Expert
 

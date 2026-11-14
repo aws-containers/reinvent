@@ -1,4 +1,4 @@
-# CON327 — Run AI on GPUs and accelerators with Amazon ECS Managed Instances
+# CON327 — Accelerate AI workloads with GPUs on Amazon ECS Managed Instances
 
 **AWS re:Invent 2026** · Breakout · 300 - Advanced
 
