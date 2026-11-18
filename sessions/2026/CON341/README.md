@@ -17,4 +17,4 @@
 
 ## Session materials
 - Slides: _added after the event_
-- Code samples: _added by the speakers_
+- Code samples: [ECS Production Shield](./ecs-production-shield/), a skill for Kiro and Claude Code that checks your Amazon ECS infrastructure code for the 5 settings from this talk and 5 more
