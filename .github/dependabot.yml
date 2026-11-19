@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Security updates only: open-pull-requests-limit 0 turns off version
+  # updates, but Dependabot still applies the ignore rules below to the
+  # security update PRs it opens for this directory.
+  - package-ecosystem: "uv"
+    directory: "/sessions/2025/CNS422/code/agent/agentcore-runtime/home-insurance"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+    ignore:
+      # strands-agents-tools 0.9.0 removed strands_tools.calculator, which
+      # home_insurance.py imports. Stay on 0.8.x (see PR #44).
+      - dependency-name: "strands-agents-tools"
+        versions: [">=0.9.0"]
