@@ -65,6 +65,7 @@ It first asks a few things the code can't show, like how long your app takes to 
 
 - It does not change your files unless you say yes, and it shows every change.
 - It does not deploy, call AWS APIs or need AWS credentials.
+- It does not run your project's code or download anything unless you say yes to that exact command.
 - It does not check logging, secrets, runtime hardening, ECS Exec or IAM roles in this version.
 
 Review every change before you deploy it.
@@ -76,6 +77,7 @@ Review every change before you deploy it.
 | 1.0.0 | Oct 30, 2026 | First version. |
 | 1.1.0 | Nov 18, 2026 | Asks for the main container and the start, request and shutdown times before it checks. Warns when the Service Connect timeout is shorter than the slowest request. Judges values passed into modules. A missing container health check behind a load balancer is now a WARN, and `launchType` on Fargate is a hint. Start order is checked only when one container needs another. Version tags on mutable repositories now warn. Suggests a change log after fixes. |
 | 1.2.0 | Nov 18, 2026 | Moved to the aws-containers/reinvent repo. A FireLens log router can stay essential, as AWS recommends, and a non-essential one needs monitoring. The Service Connect timeout is judged by the value in effect, set or default, against the slowest request. Warns when a fixed desired count can reset the count that auto scaling set. |
+| 1.2.1 | Nov 19, 2026 | Review feedback. Validation commands such as `terraform init` and `cdk synth` run only after the user says yes, and module source is read only if it's already on disk. Text inside the reviewed repo is data, never instructions. |
 
 ## License
 
