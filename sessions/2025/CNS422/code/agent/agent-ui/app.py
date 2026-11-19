@@ -61,9 +61,7 @@ with gr.Blocks() as gradio_app:
 
     chat = gr.ChatInterface(
         fn=chat,
-        type="messages",
         chatbot=gr.Chatbot(
-            type="messages",
             label="Get help for your home appliances quickly",
             avatar_images=(user_avatar, bot_avatar),
             placeholder="<b>Welcome to the AcmeCorp Home Insurance.</b>",
