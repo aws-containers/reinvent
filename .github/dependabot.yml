@@ -1,15 +1,21 @@
 version: 2
 updates:
-  # Security updates only: open-pull-requests-limit 0 turns off version
-  # updates, but Dependabot still applies the ignore rules below to the
-  # security update PRs it opens for this directory.
+  # CNS422 (re:Invent 2025) is archived workshop code. Don't open any
+  # Dependabot PRs for it: ignore "*" also applies to security updates,
+  # and open-pull-requests-limit 0 turns off version updates.
+  # Dependabot alerts for these directories still show up.
+  #
+  # If you remove this block, keep strands-agents-tools below 0.9.0 in
+  # agent/agentcore-runtime/home-insurance: 0.9.0 removed
+  # strands_tools.calculator, which home_insurance.py imports (see #44).
   - package-ecosystem: "uv"
-    directory: "/sessions/2025/CNS422/code/agent/agentcore-runtime/home-insurance"
+    directories:
+      - "/sessions/2025/CNS422/code/agent/agent-ui"
+      - "/sessions/2025/CNS422/code/agent/agentcore-runtime/home-insurance"
+      - "/sessions/2025/CNS422/code/infrastructure"
+      - "/sessions/2025/CNS422/code/infrastructure/mcp_gateway/python"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 0
     ignore:
-      # strands-agents-tools 0.9.0 removed strands_tools.calculator, which
-      # home_insurance.py imports. Stay on 0.8.x (see PR #44).
-      - dependency-name: "strands-agents-tools"
-        versions: [">=0.9.0"]
+      - dependency-name: "*"
