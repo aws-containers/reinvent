@@ -1,11 +1,6 @@
-# AWS re:Invent 2025 | Kubernetes Track Assets
+# AWS re:Invent 2026 | Containers Track Assets
 
-This repository contains slides, latest launches, demos, and other assets for the Kubernetes (KUB) sub-track within the Containers & Serverless (CNS) track from AWS re:Invent 2025. Each session is organized by session number and title. Click on the session number to access the materials for that specific session. Any code samples/files are not supported products and should be thoroughly tested, secured, and optimized according to your organization's standards before production deployment. 
-
-## Latest RIV 25' EKS Launches
-- [Amazon EKS Capabilities](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-eks-capabilities/) - A fully-managed extensible set of Kubernetes-native platform features for workload deployment, AWS cloud resource management, and Kubernetes resource composition and orchestration. Check out: [Launch Blog](https://aws.amazon.com/blogs/aws/announcing-amazon-eks-capabilities-for-workload-orchestration-and-cloud-resource-management?trk=a1b804dd-6719-46ac-82bd-7f3c77ffcf8d&sc_channel=el), [EKS Features Page](https://aws.amazon.com/eks/features/?trk=857acc86-5b92-45a9-8581-71496815a235&sc_channel=el), [User Guide](https://docs.aws.amazon.com/eks/latest/userguide/capabilities.html?trk=051c77b6-0c3c-4bcb-8d73-187f9e60b3ef&sc_channel=el)
-- [Container Network Observability](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-eks-enhanced-container-network-observability/) - New network observability features in EKS that provide deeper insights into container networking environments. These new features help you better understand, monitor, and troubleshoot your Kubernetes network landscape in AWS.Check out: [Launch Blog](https://aws.amazon.com/blogs/aws/monitor-network-performance-and-traffic-across-your-eks-clusters-with-container-network-observability/?trk=6d3267fc-33d5-4487-8099-245f4a3ba31e&sc_channel=el), [User Guide](https://docs.aws.amazon.com/eks/latest/userguide/network-observability.html?trk=6a242e1a-8b48-45e7-9c1c-4cde0f7421b0&sc_channel=el), [Deep dive on on monitoring network performance using AWS Managed Open-Source Services](https://aws.amazon.com/blogs/containers/monitoring-network-performance-on-amazon-eks-using-aws-managed-open-source-services/?trk=ddfab23a-e015-40f6-800b-2c9756b8d17e&sc_channel=el), [Deep dive on monitoring network performance when running AI/ML on EKS](https://aws.amazon.com/blogs/containers/enhancing-and-monitoring-network-performance-when-running-ml-inference-on-amazon-eks/?trk=5f2a4a3f-84b4-4d5c-ae8b-a0e32571e583&sc_channel=el)
-
+This repository contains slides, demos, and other assets for the Containers (CON) track from AWS re:Invent 2026. Each session is organized by session number and title. Click on the session number to access the materials for that specific session. Any code samples/files are not supported products and should be thoroughly tested, secured, and optimized according to your organization's standards before production deployment. 
 
 ## General Resources
 
@@ -34,51 +29,82 @@ Discover how you can deploy and scale AI/ML workloads on Amazon EKS.
 ## Sessions
 
 ### Breakouts
-- [CNS205](sessions/CNS205) - The Future of Kubernetes on AWS
-- [CNS210](sessions/CNS210) - From monolith to microservices: Migrate and modernize with Amazon EKS
-- [CNS344](sessions/CNS344) - Generative and Agentic AI on Amazon EKS
-- [CNS354](sessions/CNS354) - Amazon EKS Auto Mode: Evolving Kubernetes ops to enable innovation
-- [CNS429](sessions/CNS429) - Under the hood: Architecting Amazon EKS for scale and performance
-- [CNS417](sessions/CNS417) - Networking and observability strategies for Kubernetes
+- [CON201](sessions/2026/CON201) - The future of Kubernetes on AWS
+- [CON324](sessions/2026/CON324) - From your first Amazon EKS cluster to a self-serve developer platform
+- [CON325](sessions/2026/CON325) - Running AI agents you can trust on Amazon EKS
+- [CON326](sessions/2026/CON326) - What's new and what's next for Amazon ECS
+- [CON327](sessions/2026/CON327) - Accelerate AI workloads with GPUs on Amazon ECS Managed Instances
+- [CON328](sessions/2026/CON328) - Secure agents at scale on Amazon ECS with VM-level isolation
+- [CON329](sessions/2026/CON329) - Accelerate application development with Amazon ECS Express Mode
+- [CON346](sessions/2026/CON346) - Enhanced container image access & distribution with Amazon ECR
+- [CON347](sessions/2026/CON347) - Intelligent, right-sized compute on Amazon EKS
+- [CON408](sessions/2026/CON408) - Inside Amazon EKS: The resilient foundation for critical workloads
+- [CON409](sessions/2026/CON409) - ML, automotive, and robotics simulations at scale on AWS Batch
+- [CON414](sessions/2026/CON414) - Customize and serve models at scale on Amazon EKS
 
 ### Chalk Talks
-- [INV510](sessions/INV510) - Next generation etcd for Amazon EKS
-- [CNS207](sessions/CNS207) - Accelerate container migrations with Amazon EKS Auto Mode
-- [CNS303](sessions/CNS303) - Architecture patterns for MLOps on Amazon EKS
-- [CNS332](sessions/CNS332) - Securing and optimizing your software supply chain with Amazon ECR
-- [CNS355](sessions/CNS355) - Unlock distributed GenAI inference with Amazon EKS Hybrid Nodes
-- [CNS356](sessions/CNS356) - Master identity-first security with Amazon EKS Auto Mode
-- [CNS357](sessions/CNS357) - Zero to production: Simplify AI deployments with Amazon EKS Auto Mode
-- [CNS377](sessions/CNS377) - Optimizing Amazon EKS costs through workload analysis and observability
-- [CNS401](sessions/CNS401) - Amazon EKS: Infrastructure as code, GitOps, or CI/CD
-- [CNS414](sessions/CNS414) - Scale, optimize, and upgrade your Kubernetes cluster with Karpenter
-- [CNS418](sessions/CNS418) - Design multi-region resilience strategies on Amazon EKS
-- [CNS419](sessions/CNS419) - Optimize GenAI inference and model performance on Amazon EKS
-- [CNS420](sessions/CNS420) - Shuffle, Scale, Succeed: Optimizing Spark Performance on Amazon EKS
+- [CON305](sessions/2026/CON305) - Layered security for Amazon EKS: Patterns that scale
+- [CON306](sessions/2026/CON306) - Securing and optimizing your software supply chain with Amazon ECR
+- [CON307](sessions/2026/CON307) - Demystifying the shared security model on Amazon ECS
+- [CON308](sessions/2026/CON308) - Right-size and scale Amazon ECS with effective autoscaling patterns
+- [CON309](sessions/2026/CON309) - Connect your Amazon ECS services without the complexity
+- [CON310](sessions/2026/CON310) - Ship software safely with Amazon ECS advanced deployments
+- [CON330](sessions/2026/CON330) - Building resilient Amazon ECS applications: A multi-layer approach
+- [CON331](sessions/2026/CON331) - AI-accelerated migration from self-managed Kubernetes to EKS Auto Mode
+- [CON332](sessions/2026/CON332) - Strategies for agentic-ready architectures on Amazon EKS
+- [CON333](sessions/2026/CON333) - Observability-driven scaling: Teaching EKS clusters to right-size themselves
+- [CON334](sessions/2026/CON334) - Network observability on Amazon EKS: From coverage gaps to insights
+- [CON335](sessions/2026/CON335) - Architect production MCP servers on Amazon ECS
+- [CON336](sessions/2026/CON336) - Reduce incident response time on Amazon ECS with AI observability
+- [CON337](sessions/2026/CON337) - Decouple and scale Amazon ECS workloads with event-driven patterns
+- [CON343](sessions/2026/CON343) - Multi-tenant compute modernization with Amazon EMR on EKS
+- [CON345](sessions/2026/CON345) - Eliminate wasted compute capacity with Amazon ECS
+- [CON402](sessions/2026/CON402) - Amazon EKS: Infrastructure as code, GitOps, or CI/CD
+- [CON410](sessions/2026/CON410) - Deep dive into networking architectures for Amazon EKS Hybrid Nodes
+- [CON411](sessions/2026/CON411) - Scale, optimize and deploy inference with Karpenter and EKS Auto Mode
+- [CON412](sessions/2026/CON412) - Breaking down batch inference with Ray Data on Amazon EKS
+- [CON413](sessions/2026/CON413) - Scale financial risk simulations with AWS Batch and Amazon ECS
+- [INV513](sessions/2026/INV513) - Lifecycle of a pod: trust boundaries in VM-isolated containers
 
-### Builders Sessions  
-- [CNS305](sessions/CNS305) - Bring the power of Amazon EKS to your on-premises applications
-- [CNS314](sessions/CNS314) - Deploy multi-agent AI on Amazon EKS
-- [CNS317](sessions/CNS317) - Enhance your Amazon EKS development workflow with MCP
-- [CNS331](sessions/CNS331) - Securing and observing Amazon EKS clusters
-- [CNS405](sessions/CNS405) - Cloud-native Java on Amazon EKS
-- [CNS407](sessions/CNS407) - Master KRMOps: Declarative resource management with Amazon EKS and kro
+### Builders Sessions
+- [CON202](sessions/2026/CON202) - Launch a production container app in under 5 minutes
+- [CON302](sessions/2026/CON302) - Hybrid Kubernetes made simple: EKS Hybrid Nodes gateway for on-prem and edge AI
+- [CON303](sessions/2026/CON303) - Agentic developer experience with Amazon EKS
+- [CON304](sessions/2026/CON304) - Accelerate declarative resource management with Amazon EKS Capabilities
+- [CON311](sessions/2026/CON311) - Securing and observing Amazon EKS clusters
+- [CON312](sessions/2026/CON312) - Resolve Amazon ECS incidents faster with AWS DevOps Agent
+- [CON314](sessions/2026/CON314) - Modernize and containerize legacy apps to Amazon ECS with AWS Transform
+- [CON315](sessions/2026/CON315) - Connect and secure service-to-service networking on Amazon ECS
+- [CON317](sessions/2026/CON317) - Productionize, secure, and scale agentic applications on Amazon ECS
+- [CON319](sessions/2026/CON319) - Amazon EKS incident response and remediation with AWS DevOps Agent
+- [CON405](sessions/2026/CON405) - Cloud-native Java on Amazon EKS
 
 ### Code Talks
-- [CNS421](sessions/CNS421) - Streamline Amazon EKS operations with Agentic AI
-- [CNS422](sessions/CNS422) - Modernize containers for AI agents using AgentCore Gateway 
+- [CON338](sessions/2026/CON338) - The golden path for agentic workloads: safe by default on Amazon EKS
+- [CON339](sessions/2026/CON339) - Fleet-wide AIOps for Amazon EKS with the AWS DevOps Agent
+- [CON340](sessions/2026/CON340) - Troubleshooting and recovering failed Amazon ECS deployments
+- [CON348](sessions/2026/CON348) - Defense-in-depth for containers on Amazon EKS: A layering story
 
 ### Lightning Talks
-- [CNS208](sessions/CNS208) - Enhancing container security with Amazon ECR
-- [CNS209](sessions/CNS209) - Simplify backup for stateful Amazon EKS workloads
+- [CON204](sessions/2026/CON204) - Move your app to AWS Elastic Beanstalk and forget the ops
+- [CON207](sessions/2026/CON207) - Amazon ECS Gateway: Managed ingress for containerized applications
+- [CON341](sessions/2026/CON341) - 5 Amazon ECS features that prevent common production incidents
 
-### Workshops 
-- [CNS201](sessions/CNS201) - Fundamentals to scale Kubernetes across your organization
-- [CNS204](sessions/CNS204) - Kubernetes simplified: Get hands-on with Amazon EKS Auto Mode
-- [CNS301](sessions/CNS301) - Accelerate platform engineering on Amazon EKS
-- [CNS322](sessions/CNS322) - Running compute efficient workloads on Amazon EKS Auto Mode
-- [CNS328](sessions/CNS328) - Paper to production: Hosting LLMs on Amazon EKS using NVIDIA GPUs
-- [CNS410](sessions/CNS410) - Optimize analytics workloads on Amazon EKS for performance and cost 
+### Workshops
+- [CON203](sessions/2026/CON203) - Fundamentals to scale Kubernetes across your organization
+- [CON301](sessions/2026/CON301) - Running compute-efficient workloads on Amazon EKS Auto Mode
+- [CON313](sessions/2026/CON313) - Building and scaling inference workloads on Amazon EKS
+- [CON316](sessions/2026/CON316) - Transform your SaaS for the agentic AI era on Amazon ECS
+- [CON318](sessions/2026/CON318) - Building resilient deployment pipelines with Amazon ECS
+- [CON320](sessions/2026/CON320) - Building and securing AI agents on Amazon EKS
+- [CON321](sessions/2026/CON321) - Build a production multi-tier application on Amazon ECS
+- [CON322](sessions/2026/CON322) - Deploy accelerated workloads with Amazon ECS Managed Instances
+- [CON344](sessions/2026/CON344) - Multi-tenant SaaS and agentic apps on Amazon EKS
+- [CON401](sessions/2026/CON401) - Accelerate platform engineering on Amazon EKS
+- [CON407](sessions/2026/CON407) - Optimize analytics workloads on Amazon EKS for performance and cost
+
+### Looking for re:Invent 2025 session resources?
+See [sessions/2025](sessions/2025).
 
 ### Looking for re:Invent 2024 session resources?
 See [aws-samples/reinvent24](https://github.com/aws-samples/reinvent24).
