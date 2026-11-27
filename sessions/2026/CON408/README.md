@@ -18,3 +18,15 @@
 ## Session materials
 - Slides: _added after the event_
 - Code samples: _added by the speakers_
+
+### Grafana dashboards
+Exported from Grafana 12 in the v2 dashboard schema (needs Grafana 12 or later with dynamic dashboards enabled). Import through Dashboards > New > Import, then pick your Prometheus data source.
+- [API Server Troubleshooter v2](dashboards/api-server-troubleshooter-v2.json)
+- [API Server v3](dashboards/api-server-v3.json)
+- [Node protection](dashboards/node-protection.json)
+
+### Visual guides
+Self-contained HTML pages; download and open in a browser.
+- [API server visual journey](visuals/apiserver-visual-journey.html)
+- [Node protection system](visuals/node-protection-system.html)
+- [Node protection visual journey](visuals/node-protection-visual-journey.html)
