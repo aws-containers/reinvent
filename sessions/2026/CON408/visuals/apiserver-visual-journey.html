@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="author" content="Shane Corbett, Kubernetes Specialist"><meta name="contact" content="shancor@amazon.com"><meta name="description" content="A stage-by-stage visual journey through one request to the Kubernetes API server, and how the API Server Troubleshooter dashboard watches each stage."><title>Where did the request spend its time? · A visual journey · Shane Corbett</title>
+<style>
+:root{--bg:#0d141c;--bg2:#121c26;--card:#17222e;--card2:#1d2a38;--line:#2a3948;--ink:#e8eef4;--muted:#9fb0c0;--dim:#6f8396;
+--client:#5B9BF8;--apiserver:#F5B83D;--storage:#E07B24;--webhook:#A78BFA;--fair:#2DD4BF;--ok:#3FB950;--warn:#FADE2A;--bad:#F2495C;--info:#8AB8FF;--grey:#5B6B85;
+--sans:"Inter","SF Pro Text",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--info);text-underline-offset:3px}a:hover{color:#fff}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--info);outline-offset:4px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(40px,5.2vw,66px);line-height:1.02;letter-spacing:-.03em;font-weight:700;margin-bottom:18px}
+h1 em{font-style:normal;color:var(--apiserver)}
+h2{font-size:clamp(28px,3.1vw,40px);line-height:1.12;letter-spacing:-.025em;font-weight:700;margin-bottom:12px}
+h3{font-size:18px;font-weight:650;margin-bottom:6px}
+code{font-family:var(--mono);font-size:.88em;background:#0a1016;padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--info);color:#000;padding:8px 12px;border-radius:6px}.skip:focus{left:8px;z-index:50}
+
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;padding:26px 20px;border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;gap:18px;overflow:auto}
+.rail-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.rail-title strong{display:block;font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+.stack{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.stack a{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;text-decoration:none;color:var(--muted);padding:9px 10px;border-radius:9px;border:1px solid transparent;background:var(--card);transition:all .25s}
+.stack a span.num{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.stack a b{display:block;font-weight:600;font-size:14px;color:var(--ink)}
+.stack a small{display:block;font-size:12px;color:var(--dim)}
+.stack a::before{content:"";position:absolute}
+.stack li{position:relative}
+.stack li::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--c,var(--line));opacity:.5}
+.stack a.active{border-color:var(--c,var(--info));background:var(--card2);transform:translateX(4px)}
+.stack a.active b{color:var(--c,var(--ink))}
+.rail-legend{margin-top:auto;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.rail-legend div{display:flex;gap:8px;align-items:center;margin:4px 0}
+.rail-legend i{width:12px;height:12px;border-radius:3px;background:var(--c);display:inline-block;flex:none}
+.rail-by{font-size:12px;color:var(--dim);line-height:1.45}.rail-by b{color:var(--muted)}
+
+main{min-width:0}
+.hero{padding:76px 64px 54px;background:radial-gradient(1200px 500px at 20% -10%,#1b3350 0%,transparent 60%),radial-gradient(800px 400px at 95% 10%,#3a2a12 0%,transparent 55%),var(--bg)}
+.kicker{display:inline-block;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--apiserver);font-weight:650;margin-bottom:16px}
+.lede{font-size:21px;line-height:1.5;color:var(--muted);max-width:760px;margin-bottom:18px}
+.byline{display:inline-flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);padding:10px 16px;border-radius:999px;font-size:14.5px;color:var(--muted);margin:10px 0 36px}
+.byline b{color:var(--ink)}.byline .dot{width:8px;height:8px;border-radius:50%;background:var(--apiserver)}
+.howto{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1000px}
+.howto div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.howto b{display:block;font-size:14px;margin-bottom:4px}.howto p{margin:0;font-size:14px;color:var(--muted)}
+.howto .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:6px;margin-bottom:8px;color:#000;background:var(--c)}
+
+.chapter{padding:84px 64px 24px;max-width:1180px}
+.chapter-head{max-width:820px;margin-bottom:28px}
+.intro{font-size:18.5px;color:var(--muted);margin:0}
+.lesson{margin:34px 0 0;padding:22px 26px;border-left:4px solid var(--apiserver);background:linear-gradient(90deg,#1c2432,transparent);border-radius:0 14px 14px 0;font-size:20px;line-height:1.45;font-weight:600;max-width:900px}
+.lesson small{display:block;font-weight:400;font-size:14.5px;color:var(--muted);margin-top:6px}
+
+.scene{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px 18px;margin:0 0 14px}
+.scene .label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.scene svg{width:100%;height:auto;display:block}
+.caption{font-size:14.5px;color:var(--muted);margin:10px 2px 0;max-width:900px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.controls button{background:var(--bg2);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:550;transition:all .2s}
+.controls button:hover{color:var(--ink);border-color:var(--dim)}
+.controls button[aria-pressed=true]{background:var(--ink);color:#0b1117;border-color:var(--ink)}.controls button[aria-pressed=true]:hover{color:#0b1117;border-color:var(--ink)}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.readout{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.readout small{display:block;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.readout b{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--v,var(--ink))}
+.readout span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.steps button{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 10px 8px;text-align:left;color:var(--muted);line-height:1.3;position:relative;transition:all .2s}
+.steps button b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
+.steps button small{font-size:12px}
+.steps button[aria-pressed=true]{border-color:var(--c);background:var(--card2);box-shadow:inset 0 3px 0 var(--c)}
+.watch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:14px;color:var(--muted)}
+.watch .chip{display:inline-flex;align-items:center;gap:7px;background:#0a1016;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--ink);font-size:13.5px}
+.watch .chip i{width:9px;height:9px;border-radius:2px;background:var(--c);display:inline-block}
+
+.dash{margin-top:30px}
+.dash-head{display:flex;align-items:baseline;gap:14px;margin-bottom:12px}
+.dash-head h3{margin:0;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--info)}
+.dash-head span{font-size:14px;color:var(--muted)}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:14px}
+.pcard{background:#111a24;border:1px solid #243242;border-radius:10px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pcard .ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pcard .pt{font-size:14px;font-weight:600}
+.pcard .pw{font-size:11.5px;color:var(--dim);white-space:nowrap;font-family:var(--mono)}
+.pcard svg{width:100%;height:auto;display:block}
+.pcard .pr{font-size:13.5px;color:var(--muted);margin:0;line-height:1.45}
+.pcard .pr b{color:var(--ink)}
+.pcard .ill{font-size:10.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.pcard.wide{grid-column:1/-1}
+.pcard.stat{align-items:stretch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.tile{border-radius:8px;padding:10px 10px 8px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;color:#0b1117;background:var(--c)}
+.tile.outline{background:#111a24;color:var(--ink);border:1px solid #243242}
+.tile.outline b{color:var(--c)}
+.tile small{font-size:11px;line-height:1.25;font-weight:600;opacity:.9}
+.tile b{font-size:26px;line-height:1;font-weight:700}
+.tile-groups{display:grid;grid-template-columns:7fr 4fr 2fr;gap:14px;margin-bottom:8px}
+.tile-groups > div{border-top:2px solid var(--c);padding-top:8px}
+.tile-groups h4{margin:0 0 8px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+
+details{background:var(--bg2);border:1px solid var(--line);border-radius:12px;margin:14px 0 0;max-width:1000px}
+details summary{padding:12px 18px;cursor:pointer;font-weight:600;color:var(--muted);list-style:none;display:flex;gap:10px;align-items:center}
+details summary::before{content:"+";font-family:var(--mono);color:var(--info);width:14px}
+details[open] summary::before{content:"–"}
+details summary:hover{color:var(--ink)}
+details .body{padding:0 18px 16px;color:var(--muted);font-size:15px}
+details .body p{margin:0 0 10px}
+details .body b{color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.mini h3{font-size:15px;margin-bottom:4px}.mini p{margin:0;font-size:14px;color:var(--muted)}
+.eq{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px;color:var(--muted);margin:14px 0 0}
+.eq span{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.eq b{color:var(--ink)}
+.agree{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.agree button{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;text-align:left;color:var(--muted);line-height:1.35;transition:all .2s}
+.agree button b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:3px}
+.agree button small{font-size:12.5px;display:block}
+.agree button em{display:block;font-style:normal;font-size:11.5px;margin-top:8px;color:var(--c);font-weight:600}
+.agree button[aria-pressed=true]{border-color:var(--apiserver);background:var(--card2)}
+.slider{display:flex;align-items:center;gap:14px;margin:0 0 14px;color:var(--muted);font-size:14px}
+.slider input{width:260px;accent-color:var(--client)}
+.slider output{font-family:var(--mono);color:var(--ink);min-width:48px}
+.map{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:start}
+.walk{display:flex;flex-direction:column;gap:10px}
+.walk div{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:28px 1fr;gap:10px;color:var(--muted);font-size:14.5px;transition:all .25s}
+.walk div b{color:var(--ink);display:block;font-size:14.5px}
+.walk div .n{width:26px;height:26px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.walk div.on{border-color:var(--apiserver)}.walk div.on .n{background:var(--apiserver);color:#000;border-color:var(--apiserver)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.gloss div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.gloss b{display:block;color:var(--ink);font-size:14px}
+.gloss i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.pindex{columns:2;column-gap:28px;font-size:14px;color:var(--muted)}
+.pindex h4{margin:0 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--info);break-after:avoid}
+.pindex ul{margin:0 0 16px;padding-left:18px}.pindex li{margin:2px 0}
+.pindex b{color:var(--ink);font-weight:600}
+footer{padding:50px 64px 70px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px;line-height:1.7;margin-top:60px;background:var(--bg2)}
+footer strong{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+svg text{font-family:var(--sans)}
+.hatch{fill:url(#hatch)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 1.2s ease-in-out infinite}
+@media(max-width:1100px){.layout{grid-template-columns:220px minmax(0,1fr)}.hero,.chapter,footer{padding-left:36px;padding-right:36px}.steps{grid-template-columns:repeat(3,1fr)}.agree{grid-template-columns:repeat(2,1fr)}.tile-groups{grid-template-columns:1fr}.map{grid-template-columns:1fr}}
+@media(max-width:760px){.layout{display:block}.rail{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}.stack{flex-direction:row;overflow:auto}.stack a{min-width:150px}.rail-legend,.rail-by{display:none}.hero,.chapter,footer{padding-left:20px;padding-right:20px}.howto,.two,.three{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.pindex{columns:1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+@media print{body{background:#fff;color:#111}.rail,.controls,.skip{display:none}.layout{display:block}.scene,.pcard,.mini,details,.readout,.tile.outline{background:#fff;border-color:#bbb;color:#111}.pcard .pr,.caption,.intro{color:#333}.lesson{background:#f3f3f3;color:#111}}
+</style></head>
+<body><a class="skip" href="#path">Skip to the guide</a>
+<svg width="0" height="0" style="position:absolute"><defs>
+<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#1a2430"/><line x1="0" y1="0" x2="0" y2="6" stroke="#5B6B85" stroke-width="2"/></pattern>
+<pattern id="hatchred" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#2a1a1e"/><line x1="0" y1="0" x2="0" y2="6" stroke="#F2495C" stroke-width="2"/></pattern>
+<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#9fb0c0"/></marker>
+<marker id="arrw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#FADE2A"/></marker>
+</defs></svg>
+<div class="layout">
+<aside class="rail">
+<div class="rail-title">API server troubleshooter<strong>A visual journey through one request</strong></div>
+<ul class="stack" id="stack">
+<li style="--c:var(--client)"><a href="#path" style="--c:var(--client)"><span class="num">01</span><span><b>One request, two clocks</b><small>what the client feels vs what the server did</small></span></a></li>
+<li style="--c:var(--apiserver)"><a href="#owners" style="--c:var(--apiserver)"><span class="num">02</span><span><b>Every millisecond has an owner</b><small>LIST, the ladder, and etcd</small></span></a></li>
+<li style="--c:var(--fair)"><a href="#fairness" style="--c:var(--fair)"><span class="num">03</span><span><b>Seats, not requests</b><small>priority and fairness</small></span></a></li>
+<li style="--c:var(--apiserver)"><a href="#cache" style="--c:var(--apiserver)"><span class="num">04</span><span><b>The watch cache</b><small>one stream in, thousands out</small></span></a></li>
+<li style="--c:var(--storage)"><a href="#storage" style="--c:var(--storage)"><span class="num">05</span><span><b>Storage, the client view</b><small>what the API server sees of etcd</small></span></a></li>
+<li style="--c:var(--webhook)"><a href="#front" style="--c:var(--webhook)"><span class="num">06</span><span><b>The front door and the webhooks</b><small>identity, filters, admission</small></span></a></li>
+<li style="--c:var(--grey)"><a href="#process" style="--c:var(--grey)"><span class="num">07</span><span><b>The process itself</b><small>memory, threads, in-flight, drops</small></span></a></li>
+<li style="--c:var(--ok)"><a href="#walk" style="--c:var(--ok)"><span class="num">08</span><span><b>Walk the dashboard</b><small>one request class, one window</small></span></a></li>
+<li style="--c:var(--line)"><a href="#reference" style="--c:var(--dim)"><span class="num">··</span><span><b>Reference</b><small>tiles and panels by row</small></span></a></li>
+</ul>
+<div class="rail-legend"><div><i style="--c:var(--client)"></i>Client (kubectl, controllers, kubelets)</div><div><i style="--c:var(--apiserver)"></i>API server's own work</div><div><i style="--c:var(--fair)"></i>Priority and fairness (queues, seats)</div><div><i style="--c:var(--webhook)"></i>Admission webhooks</div><div><i style="--c:var(--storage)"></i>Storage (etcd, as the API server sees it)</div><div style="margin-top:8px"><i style="--c:var(--ok)"></i>fine &nbsp;<i style="--c:var(--warn)"></i>read beside it &nbsp;<i style="--c:var(--bad)"></i>harm</div><div style="color:var(--dim);margin-top:4px">Colours are this guide's; the dashboard uses Grafana's defaults.</div></div>
+<div class="rail-by"><b>Prepared by Shane Corbett</b><br>Kubernetes Specialist<br><a href="mailto:shancor@amazon.com">shancor@amazon.com</a></div>
+</aside>
+<main>
+<header class="hero" id="top">
+<span class="kicker">Kubernetes API server · Companion to the API Server Troubleshooter dashboard</span>
+<h1>Where did the request <em>spend its time?</em></h1>
+<p class="lede">A slow API server is rarely slow everywhere. One request passes through a handful of stages, each owned by someone different: the client, the fairness queue, a webhook, the server's own code, the storage behind it. This guide follows one request through those stages and shows which panel watches each one.</p>
+<div class="byline"><span class="dot"></span>Prepared by <b>Shane Corbett</b> · Kubernetes Specialist · <a href="mailto:shancor@amazon.com">shancor@amazon.com</a></div>
+<div class="howto">
+<div><span class="tag" style="--c:var(--apiserver)">SCENE</span><b>Watch the request move</b><p>Each chapter opens with an interactive picture. Press the buttons; the picture carries the idea.</p></div>
+<div><span class="tag" style="--c:var(--info)">DASHBOARD</span><b>See the panel that watches it</b><p>Below each scene, the dashboard's panels are redrawn as dark charts with the one thing to read marked in yellow.</p></div>
+<div><span class="tag" style="--c:var(--grey)">GO DEEPER</span><b>Open the detail only if you want it</b><p>SLO scopes, metric caveats and the rest of each row wait behind the "+" folds. Skip them on a first read.</p></div>
+</div>
+<p class="caption" style="margin-top:18px">Charts in this guide are drawn to show a shape, not recorded from a cluster. The dashboard this guide follows is <i>API Server Troubleshooter (Working Copy)</i>; panel titles are quoted exactly as they appear there, including the working-copy rows for the watch cache, storage and admission.</p>
+</header>
+
+<section class="chapter" id="path">
+<div class="chapter-head"><span class="kicker" style="color:var(--client)">01 · One request, two clocks</span><h2>The client's clock and the server's clock stop at different places.</h2><p class="intro">A controller sends <code>PATCH pods/web-7f</code>. Follow it through the API server one stage at a time, and watch which stages count towards "what the control plane did" and which only the client feels.</p></div>
+<div class="scene">
+<span class="label">Scene · one request through the API server · press a stage</span>
+<div class="steps" id="path-steps" style="margin-top:12px">
+<button type="button" data-step="0" aria-pressed="true" style="--c:var(--client)"><b>1 · Arrive</b><small>TLS, connection</small></button>
+<button type="button" data-step="1" aria-pressed="false" style="--c:var(--apiserver)"><b>2 · Identify</b><small>who, and allowed?</small></button>
+<button type="button" data-step="2" aria-pressed="false" style="--c:var(--fair)"><b>3 · Wait for a seat</b><small>priority and fairness</small></button>
+<button type="button" data-step="3" aria-pressed="false" style="--c:var(--webhook)"><b>4 · Admission</b><small>webhooks, validation</small></button>
+<button type="button" data-step="4" aria-pressed="false" style="--c:var(--storage)"><b>5 · Storage</b><small>read or write etcd</small></button>
+<button type="button" data-step="5" aria-pressed="false" style="--c:var(--apiserver)"><b>6 · Respond</b><small>encode, send</small></button>
+</div>
+<svg id="path-scene" viewBox="0 0 1000 300" role="img" aria-label="Six stages of one API request with two time bars beneath: total duration and the SLI duration, which skips the fairness wait and the webhooks"></svg>
+<p class="caption" id="path-text" style="min-height:48px;margin-top:6px"></p>
+<div class="readouts">
+<div class="readout"><small>Who owns this stage</small><b id="ro-path-owner" style="font-size:22px">the client</b><span id="ro-path-owner-s">and the network between</span></div>
+<div class="readout"><small>Counted in the SLI?</small><b id="ro-path-sli" style="font-size:22px">No</b><span id="ro-path-sli-s">not yet inside the server</span></div>
+<div class="readout"><small>Panel that watches it</small><b id="ro-path-panel" style="font-size:16px;line-height:1.3">TLS handshake errors + request aborts</b><span id="ro-path-panel-s">Admission &amp; AuthN/Z row</span></div>
+</div>
+</div>
+<div class="two" style="margin-top:18px">
+<div class="scene" style="margin:0"><span class="label">Two numbers at two points</span>
+<svg viewBox="0 0 480 190" role="img" aria-label="Total duration and SLI duration drawn as two bars; the difference is queue wait plus webhooks">
+<text x="30" y="34" fill="#9fb0c0" font-size="12.5">total · what the client felt · 2.4 s</text>
+<rect x="30" y="44" width="60" height="20" rx="4" fill="#F5B83D"/><rect x="90" y="44" width="150" height="20" rx="4" fill="#2DD4BF"/><rect x="240" y="44" width="130" height="20" rx="4" fill="#A78BFA"/><rect x="370" y="44" width="80" height="20" rx="4" fill="#E07B24"/>
+<text x="60" y="58" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">server</text><text x="165" y="58" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">seat wait</text><text x="305" y="58" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">webhook</text><text x="410" y="58" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">etcd</text>
+<text x="30" y="104" fill="#9fb0c0" font-size="12.5">SLI · what the control plane did · 0.5 s</text>
+<rect x="30" y="114" width="60" height="20" rx="4" fill="#F5B83D"/><rect x="90" y="114" width="80" height="20" rx="4" fill="#E07B24"/>
+<text x="60" y="128" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">server</text><text x="130" y="128" text-anchor="middle" fill="#0b1117" font-size="11" font-weight="600">etcd</text>
+<path d="M180 124 H440" stroke="#FADE2A" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/><text x="310" y="150" text-anchor="middle" fill="#FADE2A" font-size="12.5" font-weight="600">total − SLI = 1.9 s of queueing and webhooks</text>
+<text x="30" y="176" fill="#9fb0c0" font-size="12.5">Same request, two clocks. The gap already names two suspects.</text>
+</svg>
+<p class="caption">The SLI duration leaves out the fairness queue and the admission webhooks on purpose: those are not the server's own code. When the two lines on the dashboard sit together, look at the server and its storage. When they split, look at the queue and the webhooks first.</p></div>
+<div class="scene" style="margin:0"><span class="label">Three verbs, three different costs</span>
+<svg viewBox="0 0 480 190" role="img" aria-label="GET, PATCH and LIST compared by what the API server has to do for each">
+<g font-size="12.5">
+<rect x="20" y="22" width="440" height="44" rx="8" fill="#1d2a38"/><text x="34" y="40" fill="#5B9BF8" font-weight="650">GET</text><text x="34" y="58" fill="#9fb0c0">one object · usually answered from the cache · budget: 1 s at p99</text>
+<rect x="20" y="74" width="440" height="44" rx="8" fill="#1d2a38"/><text x="34" y="92" fill="#A78BFA" font-weight="650">PATCH / CREATE / UPDATE</text><text x="34" y="110" fill="#9fb0c0">one object · webhooks run · one etcd write · budget: 1 s at p99</text>
+<rect x="20" y="126" width="440" height="44" rx="8" fill="#1d2a38" stroke="#F5B83D"/><text x="34" y="144" fill="#F5B83D" font-weight="650">LIST (namespace or cluster scope)</text><text x="34" y="162" fill="#9fb0c0">every object in scope walked, filtered, encoded · budget: 30 s at p99</text>
+</g>
+<text x="20" y="184" fill="#6f8396" font-size="11.5">Budgets are the upstream SLOs over 5 minutes; they split by scope, not verb.</text>
+</svg>
+<p class="caption">The dashboard keeps LIST on its own panel because its cost grows with the cluster. A PATCH costs about the same at 100 pods and at 30,000. A LIST of all pods does not.</p></div>
+</div>
+<p class="lesson">Read two clocks before reading any one panel: total minus SLI is the time the request spent waiting for a seat or inside a webhook.<small>Everything on the dashboard refines that first split. The latency row tells you which verb and resource; the fairness, admission and storage rows tell you which owner.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The latency row at the top, and the last panel of the Admission &amp; AuthN/Z row, which draws the two clocks on one chart.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">SLI vs total request duration p99 (non-WATCH)</span><span class="pw">Admission &amp; AuthN/Z</span></div><svg data-chart="slitotal"></svg><p class="pr"><b>Read it:</b> the two lines should travel together. A gap that opens is fairness queueing or admission webhooks, which the total includes and the SLI excludes. Note the gap, then go to chapter 03 or 06 to find which.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Non List Latency</span><span class="pw">latency row</span></div><svg data-chart="nonlist"></svg><p class="pr"><b>Read it:</b> p95 by verb and resource, each with a dashed SLI twin. Everything rising together points at shared storage; one PATCH path pulling away from its own SLI twin points at admission on that resource.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Slowest Requests (P90) - 5min</span><span class="pw">latency row</span></div><svg data-chart="slowest"></svg><p class="pr"><b>Read it:</b> the three slowest request classes right now. Healthy membership changes from minute to minute. One class pinned above the rest for the whole window is the request class to carry into the rest of the dashboard: its verb, its resource, its scope.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: what the SLI excludes, the subresource filter, and the scope rule</summary><div class="body">
+<p><b>The SLI metric</b> (<code>apiserver_request_sli_duration_seconds</code>) deliberately excludes admission-webhook execution and priority-and-fairness queue wait. The total (<code>apiserver_request_duration_seconds</code>) includes both. The dashboard draws both on the latency panels so that the subtraction is visible per resource, not only in aggregate.</p>
+<p><b>The subresource filter.</b> Both latency panels drop <code>status</code>, <code>token</code>, <code>scale</code>, <code>/healthz</code>, <code>binding</code> and <code>proxy</code> subresources, and <code>WATCH</code>. Those paths have their own shapes (watches are long-lived by design) and would hide the ordinary request mix.</p>
+<p><b>Scope, not verb, sets the budget.</b> The upstream SLOs are 1 s at p99 for single-object reads and mutations, and 30 s at p99 for namespace- and cluster-scoped reads, both over 5 minutes. The <i>List Latency</i> panel groups by resource only and does not keep scope, so one line can mix a namespaced LIST and a cluster-wide one. Read it as a trend per resource, not as a pass/fail against 30 s.</p>
+<p><b>Within SLO and still a problem.</b> A LIST at 10× the cluster's own usual time can still be inside 30 s. Failure counters, rejection counters and SLO checks all interrogate failure; successful slowness shows on none of them. When those are quiet and a latency line is a large multiple of its own baseline, diagnose against the baseline.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="owners">
+<div class="chapter-head"><span class="kicker" style="color:var(--apiserver)">02 · Every millisecond has an owner</span><h2>Two measurements at two points, and the difference is the diagnosis.</h2><p class="intro">A single latency number cannot say who was slow. Two numbers taken at different points can, because the difference between them is exactly the cost of the layer in between. For a LIST the dashboard gives you three points.</p></div>
+<div class="scene">
+<span class="label">Scene · one LIST of pods, measured three times · pick where the time went</span>
+<div class="controls" style="margin-top:12px" id="ladder-controls"><button type="button" data-mode="healthy" aria-pressed="true">Healthy</button><button type="button" data-mode="etcd">Storage is slow</button><button type="button" data-mode="decode">Decoding and filtering</button><button type="button" data-mode="client">A slow client</button></div>
+<svg id="ladder-scene" viewBox="0 0 1000 300" role="img" aria-label="Three nested bars: client-observed LIST duration, storage-side LIST duration, and one etcd round trip; their proportions change with the chosen cause"></svg>
+<p class="caption" id="ladder-caption"></p>
+<div class="readouts">
+<div class="readout"><small>Owner</small><b id="ro-lad-owner" style="font-size:22px">nobody</b><span id="ro-lad-owner-s">all three layers small</span></div>
+<div class="readout"><small>Verdict</small><b id="ro-lad-verdict" style="font-size:18px;line-height:1.3">no action</b><span id="ro-lad-verdict-s"></span></div>
+<div class="readout"><small>Confirm with</small><b id="ro-lad-panel" style="font-size:16px;line-height:1.3">List Latency</b><span id="ro-lad-panel-s"></span></div>
+</div>
+</div>
+<div class="three">
+<div class="mini"><h3>Cost is set by what must be examined</h3><p>A LIST with a label selector walks every object in scope and returns the few that match. The work is the walk, not the answer. The <i>LIST waste factor</i> panel (chapter 04) shows objects walked per object returned.</p></div>
+<div class="mini"><h3>A healthy etcd percentile does not clear etcd</h3><p>GETs and LISTs are both range reads to etcd. Thousands of fast GETs dilute a p95 that a few slow LISTs would otherwise raise. Read <i>Etcd Request Latency</i> by operation, and trust the LIST-specific storage panel over the aggregate.</p></div>
+<div class="mini"><h3>A large encode time usually means a slow client</h3><p>The API server writes the response while it encodes it. When the client reads slowly, the server waits, and that wait lands in the total with nothing in etcd or decode to show for it. The bottleneck is outside the control plane.</p></div>
+</div>
+<p class="lesson">Read the LIST ladder from the outside in: client-observed, then storage-side, then one etcd round trip. Whichever layer holds most of the time owns the problem.<small>Client-observed large, storage small: the time is in the server's own handling or the client. Storage large, etcd small: decode, transform or the selector walk. All three large together: the store itself.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The latency row, and the <i>Storage</i> row's LIST panel, which is the middle rung of the ladder.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">List Latency</span><span class="pw">latency row</span></div><svg data-chart="listlat"></svg><p class="pr"><b>Read it:</b> p95 LIST by resource, with its SLI twin dashed. One resource pulling away alone is that collection growing or a client walking it with a selector. Every resource rising together is shared storage or a saturated instance.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Etcd Request Latency</span><span class="pw">latency row</span></div><svg data-chart="etcdlat"></svg><p class="pr"><b>Read it:</b> p95 by operation, measured from the API server, so it includes the network round trip. Writes normally sit above reads. A shared step across every operation is storage trouble; growth on <code>list</code> only is expensive collections.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Storage LIST duration p99 by resource</span><span class="pw">Storage, the client view</span></div><svg data-chart="storlist"></svg><p class="pr"><b>Read it:</b> the storage layer's own LIST time per resource, including every etcd page and per-object transformation. A non-zero line proves that resource's LISTs are reaching storage rather than being served from the watch cache. Large here while <i>Etcd Request Latency</i> stays small puts the cost inside the storage layer: paging, decode, decryption, not etcd.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: the three rungs, what each includes, and the audit-log view</summary><div class="body">
+<p><b>Rung 1, client-observed:</b> <code>apiserver_request_duration_seconds</code> for <code>LIST</code>. Includes everything: all etcd pages, transformation, filtering, encoding and the write to the client.</p>
+<p><b>Rung 2, storage-side:</b> <code>apiserver_storage_list_duration_seconds</code>. Includes all pages and per-object work (decryption for Secrets) but not request handling or encoding. Emitted only when the LIST goes to storage; a cache-served LIST never touches it.</p>
+<p><b>Rung 3, one page:</b> <code>etcd_request_duration_seconds</code> for <code>list</code>. One round trip to etcd, measured from the API server's side, so it also carries the network between them.</p>
+<p><b>The same split in the audit log.</b> Audit records carry latency annotations: <code>apiserver.latency.k8s.io/etcd</code> (round trips only) and <code>/decode-response-object</code> (API server CPU after the bytes arrived) are separate and may be compared directly; a large decode figure is server-side time, not etcd. <code>/serialize-response-object</code> contains <code>/response-write</code>, so never add those two; when serialize is nearly all write, the client was slow to read. The annotations are a ranking, not a partition: nothing covers the selector walk or the cache freshness wait, and the unexplained remainder is often the majority on selector LISTs.</p>
+<p><b>Who, not what.</b> Metrics carry verb and resource but never the user agent. Once the ladder names a resource, the audit log names the caller: the repo's <i>API Server Diagnostics Guide</i> holds the ready-made queries for top LIST callers and slowest URIs.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="fairness">
+<div class="chapter-head"><span class="kicker" style="color:var(--fair)">03 · Seats, not requests</span><h2>Capacity is concurrency. Requests per second is the least diagnostic number on the page.</h2><p class="intro">Each API server instance has a fixed number of seats. A request takes a seat for as long as it executes, so a slow request costs more capacity than a fast one. Priority and fairness decides who waits for a seat and who is turned away.</p></div>
+<div class="scene">
+<span class="label">Scene · one instance's seats, by priority level · pick what the traffic does</span>
+<div class="controls" style="margin-top:12px" id="seat-controls"><button type="button" data-mode="steady" aria-pressed="true">Steady</button><button type="button" data-mode="burst">Burst of cheap requests</button><button type="button" data-mode="expensive">A few long requests</button><button type="button" data-mode="borrow">Borrowing between levels</button></div>
+<svg id="seat-scene" viewBox="0 0 1000 330" role="img" aria-label="Rows of seats for five priority levels, with queued and rejected requests drawn beside each row"></svg>
+<p class="caption" id="seat-caption"></p>
+<div class="readouts">
+<div class="readout"><small>Hot level</small><b id="ro-seat-level" style="font-size:22px">none</b><span id="ro-seat-level-s">every level has headroom</span></div>
+<div class="readout"><small>Seat wait, p90</small><b id="ro-seat-wait" style="font-size:22px">0 ms</b><span id="ro-seat-wait-s">nobody queued</span></div>
+<div class="readout"><small>Rejected</small><b id="ro-seat-rej" style="font-size:22px">0</b><span id="ro-seat-rej-s"></span></div>
+<div class="readout"><small>Verdict</small><b id="ro-seat-verdict" style="font-size:16px;line-height:1.3">headroom</b><span id="ro-seat-verdict-s"></span></div>
+</div>
+</div>
+<div class="three">
+<div class="mini"><h3>Per instance, not per cluster</h3><p>Seat limits belong to one API server instance. Two instances can be idle while a third queues, because a client's long-lived connections land on one. The fairness panels keep the <code>instance</code> label for this reason.</p></div>
+<div class="mini"><h3>Seat demand ≈ rate × seats held × duration</h3><p>Normal request rate with high latency is a per-request-cost problem (a slow webhook, a big LIST, slow storage), not a capacity problem. High rate with low seat use and no queue is just a busy, healthy server.</p></div>
+<div class="mini"><h3>Whose traffic is being shaped?</h3><p>Rejections on <code>workload-low</code>, <code>workload-high</code> or a service-account level are a tenant's own requests being paced: working as designed, fixed on the client. Queueing on a system level, or a level starved by another's long requests, is the control plane's problem.</p></div>
+</div>
+<p class="lesson">Capacity is exhausted only when a level queues or rejects while its seats sit at the limit. High latency with seats to spare is cost, not capacity.<small>Rate × cost. If the rate did not change, the cost did: find the request class whose execution time grew.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The <i>Advanced Priority and Fairness</i> row: three stat tiles, then queue wait, rejections, execution and arrival panels.</span></div>
+<div class="dash-grid">
+<div class="pcard stat wide"><div class="ph"><span class="pt">Effective seat limit (post-lending) vs guaranteed floor · Requests inqueue · Priority level utilisation (fraction of limit)</span><span class="pw">fairness row</span></div><div class="tiles" style="grid-template-columns:1fr 1fr 1fr"><div class="tile outline" style="--c:var(--fair)"><small>workload-low · effective limit</small><b style="font-size:20px">at its floor</b></div><div class="tile" style="--c:var(--warn)"><small>workload-low · in queue</small><b>112</b></div><div class="tile" style="--c:var(--warn)"><small>workload-low · utilisation</small><b>0.97</b></div></div><p class="pr"><b>Read it:</b> three tiles per priority level. The effective limit rises above the floor when other levels lend their idle seats, and collapses back towards the floor when they get busy. A level with a persistent queue and utilisation near 1.0 while its limit sits at its floor is genuinely out of seats.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Time Request was in queue by flowschema (p90) - Top Instance</span><span class="pw">fairness row</span></div><svg data-chart="queuewait"></svg><p class="pr"><b>Read it:</b> the time a request spent holding a ticket before it got a seat. Any sustained value here is latency added by fairness, not by execution. It is the first half of the total − SLI gap from chapter 01.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Rejected Requests -2m</span><span class="pw">fairness row</span></div><svg data-chart="rejected"></svg><p class="pr"><b>Read it:</b> requests turned away, by flow schema and reason. <code>queue-full</code> is a burst the queue could not hold; <code>time-out</code> is a request that waited its whole budget. Zero here does not clear fairness: check the queue wait panel too.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Top executing requests by Flow</span><span class="pw">fairness row</span></div><svg data-chart="executing"></svg><p class="pr"><b>Read it:</b> who holds the seats right now, by flow schema and level. Healthy work is spread across modest flows. One flow holding most of a level's seats while that level queues is the monopoliser; its execution time (next panel on the dashboard) says whether it is many cheap calls or a few long ones.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: the rest of the fairness row, borrowing, and two negative-evidence rules</summary><div class="body">
+<p><b>Flowcontrol request execution time p90 - Top Instance</b> is the second half of the split: time after the seat was granted. Execution rising while queue wait stays flat sends you to storage, webhooks or the server's own work. Queue wait rising while execution stays flat is a seat shortage.</p>
+<p><b>Rate of addition per second</b> counts requests entering a queue. Near zero when seats are free; a sustained arrival rate means that level is running at its limit continuously, even if nothing is rejected.</p>
+<p><b>Borrowing.</b> Levels lend seats they are not using, which is why the effective limit can sit well above the floor. The floor is the only guaranteed number. Read a level's queue against its effective limit, and read a collapsing limit as neighbours getting busy.</p>
+<p><b>Two rules.</b> First: a webhook holding seats open can saturate a level it is not classified into, so a 429 storm on a system level can still be a customer webhook (chapter 06). Second: fairness counters can be wedged rather than zero; if dispatched requests stop incrementing while clients report 429s, trust the clients and the audit log.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="cache">
+<div class="chapter-head"><span class="kicker" style="color:var(--apiserver)">04 · The watch cache</span><h2>One stream comes in from etcd. Thousands go out.</h2><p class="intro">Every controller and every kubelet keeps a watch open. The API server reads each change from etcd once, keeps a copy in memory, and fans the change out to every watcher. Most reads never reach etcd at all. The cache is what makes a large cluster possible, and it has three ways to hurt.</p></div>
+<div class="scene">
+<span class="label">Scene · changes flow from etcd through the cache to the watchers · pick what happens</span>
+<div class="controls" style="margin-top:12px" id="cache-controls"><button type="button" data-mode="steady" aria-pressed="true">Steady stream</button><button type="button" data-mode="storm">Reconnect storm</button><button type="button" data-mode="fallback">Consistent read falls back</button><button type="button" data-mode="selector">LIST with a selector</button></div>
+<svg id="cache-scene" viewBox="0 0 1000 320" role="img" aria-label="etcd on the left, the watch cache in the middle, many watchers on the right, with event counts on each link"></svg>
+<p class="caption" id="cache-caption"></p>
+<div class="readouts">
+<div class="readout"><small>Fan-out</small><b id="ro-cache-fan" style="font-size:22px">×420</b><span id="ro-cache-fan-s">dispatched per event received</span></div>
+<div class="readout"><small>Replay</small><b id="ro-cache-init" style="font-size:22px">low</b><span id="ro-cache-init-s">init events per second</span></div>
+<div class="readout"><small>Reads reaching etcd</small><b id="ro-cache-fb" style="font-size:22px">few</b><span id="ro-cache-fb-s">consistent reads that fell back</span></div>
+<div class="readout"><small>Verdict</small><b id="ro-cache-verdict" style="font-size:16px;line-height:1.3">cache doing its job</b><span id="ro-cache-verdict-s"></span></div>
+</div>
+</div>
+<div class="three">
+<div class="mini"><h3>Volume or cost?</h3><p>Two watch surges can carry the same event count and cost very different amounts. The cost of a reconnect is the replay of initial events to the new watcher; a storm of reconnects against a large resource can hold seats for seconds each. Read the init-events panel beside the active-watches panel.</p></div>
+<div class="mini"><h3>Old connections or new ones?</h3><p>Watchers that time out and reopen on an existing connection look different from thousands of new clients arriving. On the dashboard the first shows as init events without a rise in active watches; the second raises both.</p></div>
+<div class="mini"><h3>Terminated means "could not keep up"</h3><p>When a watcher reads slower than events arrive, the server closes it rather than buffer forever. The client reconnects and replays. A steady line of terminations on one resource is a slow client, and it costs the server twice.</p></div>
+</div>
+<p class="lesson">The watch cache turns one etcd read into thousands of deliveries. When it stops being able to prove it is fresh, reads fall through to etcd and the ladder in chapter 02 starts to matter.<small>Fallback, replay, termination and waste are the four ways the cache stops saving work. Each has its own panel.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The <i>Watch Cache &amp; Staleness (working-copy additions)</i> row.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Watch events: received from etcd vs dispatched to watchers</span><span class="pw">watch cache row</span></div><svg data-chart="fanout"></svg><p class="pr"><b>Read it:</b> received is one line from etcd; dispatched is that line multiplied by the watchers. The ratio is your fan-out. Dispatched growing away from received, with received flat, is more watchers on the same objects, not more change.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Watch cache init events by resource (reconnect replay cost)</span><span class="pw">watch cache row</span></div><svg data-chart="initev"></svg><p class="pr"><b>Read it:</b> objects replayed to watchers that just (re)connected. A burst on one resource is a reconnect storm, and the resource's size is its cost. Line it up with <i>Terminated watchers</i> in the minutes before: close, reconnect, replay is the usual order.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">LIST waste factor (objects walked per object returned)</span><span class="pw">watch cache row</span></div><svg data-chart="waste"></svg><p class="pr"><b>Read it:</b> a ratio near 1 means LISTs return what they walk. A ratio of 40 means every returned object cost forty object evaluations: a client is asking for a small answer with a label or field selector over a large collection, in the cache or in storage. The work is the walk, and no latency annotation will ever show it. Pair this with <i>List Latency</i> for the resource and the audit log for the caller.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: consistent reads, active watches, terminated watchers, and freshness</summary><div class="body">
+<p><b>Consistent reads: cache vs fallback-to-etcd.</b> A read that asks for the latest state (no <code>resourceVersion</code>) can still be served from the cache if the cache can prove it is current. When it cannot, the read falls back to etcd. A rising fallback line means the cache is lagging the store, and every such read pays the full ladder.</p>
+<p><b>Active watches by resource (top 10).</b> Long-running WATCH requests by resource. The expected shape is stable and explained by the controllers you know you run. A step up on one resource is a new watch-heavy client; the audit log names it.</p>
+<p><b>Terminated watchers by resource.</b> Watchers closed by the server because they fell behind. Expected to be empty.</p>
+<p><b>Freshness has a hard wait.</b> A read that needs the cache to catch up to a given version waits for a bounded time before failing. Latency that clusters at a constant few seconds on reads, with nothing in etcd or decode, can be that wait rather than a webhook; the round number tells you a limit was hit, not whose (chapter 06).</p>
+<p><b>Request-side test for cache versus storage.</b> A LIST with <code>resourceVersion=0</code> in the request URI accepts a cached answer; one without demands the latest. That parameter is in the audit log's <code>requestURI</code> and is a sounder test than the absence of an etcd annotation.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="storage">
+<div class="chapter-head"><span class="kicker" style="color:var(--storage)">05 · Storage, the client view</span><h2>You cannot tune the store. You can see what you are asking of it.</h2><p class="intro">On a managed control plane the storage backend is not yours to size, defragment or re-elect. What you can see is the API server's own view as a client: how big the store is, what fills it, how long its LISTs take and whether its calls fail. Every fix on this row lives on the client side.</p></div>
+<div class="scene">
+<span class="label">Scene · what the store holds and who changes it · pick a pattern</span>
+<div class="controls" style="margin-top:12px" id="store-controls"><button type="button" data-mode="quiet" aria-pressed="true">Quiet</button><button type="button" data-mode="secrets">Secret rotation storm</button><button type="button" data-mode="leases">Lease churn</button><button type="button" data-mode="growth">A collection that keeps growing</button></div>
+<svg id="store-scene" viewBox="0 0 1000 320" role="img" aria-label="Stored objects by resource as bars, a database size gauge, a write-rate meter and an error counter"></svg>
+<p class="caption" id="store-caption"></p>
+<div class="readouts">
+<div class="readout"><small>DB size</small><b id="ro-st-size" style="font-size:22px">1.8 GiB</b><span id="ro-st-size-s">slow, explainable growth</span></div>
+<div class="readout"><small>Largest resource</small><b id="ro-st-big" style="font-size:22px">pods</b><span id="ro-st-big-s">as expected</span></div>
+<div class="readout"><small>Storage errors</small><b id="ro-st-err" style="font-size:22px">0</b><span id="ro-st-err-s">per second</span></div>
+<div class="readout"><small>Where the fix lives</small><b id="ro-st-fix" style="font-size:16px;line-height:1.3">nowhere needed</b><span id="ro-st-fix-s"></span></div>
+</div>
+</div>
+<div class="two">
+<div class="mini"><h3>Writes are usually someone's loop</h3><p>Sustained mutation storms come from a short list of patterns: certificate or secret rotation tools, logging and monitoring agents rewriting ConfigMaps, lease renewals from a very large node count, and custom controllers reconciling too eagerly. The audit log's "top mutating operations" query names the user agent.</p></div>
+<div class="mini"><h3>Size drives three other panels</h3><p>A collection that grows without a plateau shows up again as rising <i>List Latency</i> for that resource, larger <i>Response sizes</i>, and climbing <i>API Pod Memory</i>, because the cache holds a copy of every object. Read growth here first; it explains the others.</p></div>
+</div>
+<p class="lesson">Storage errors are distinct from fairness rejections, and storage slowness is distinct from both. This row tells them apart; the fix for all three is to change what clients ask.<small>The managed store's internals (disk, compaction, leadership) are not on this dashboard because you cannot act on them. What you ask of it, you can.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The <i>Storage — the client view (working-copy additions)</i> row.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Stored objects by resource (top 10)</span><span class="pw">storage row</span></div><svg data-chart="objects"></svg><p class="pr"><b>Read it:</b> the ten largest collections. The mix should be stable and explained by your workload. One resource climbing continuously, and correlating with memory or LIST latency, is the collection to go and look at. An empty panel is a warning rather than a clean result: the count is published by the cache, so no series usually means the cache has not reported.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">etcd client errors by operation/resource</span><span class="pw">storage row</span></div><svg data-chart="etcderr"></svg><p class="pr"><b>Read it:</b> calls from the API server to the store that failed, by operation and resource. Expected to be empty. Sustained errors are a storage-layer failure and should be read apart from fairness rejections, which are the server choosing not to try.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Response sizes p99 (LIST, by resource)</span><span class="pw">storage row</span></div><svg data-chart="respsize"></svg><p class="pr"><b>Read it:</b> how many bytes a LIST of each resource sends back at the 99th percentile. Each resource has a usual band. A step up is payload growth: more objects, or bigger ones (annotations, status), and it raises encode time on the server and decode time on every client that asks.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: Storage DB size, the storage LIST panel, and what is left off on purpose</summary><div class="body">
+<p><b>Storage DB size (client-reported)</b> is the store's size as the API server learns it. Healthy growth is slow and reaches plateaus. Persistent acceleration together with rising storage latency is the pair to escalate on; size alone is context.</p>
+<p><b>Storage LIST duration p99 by resource</b> appeared in chapter 02 as rung two of the ladder. It belongs to this row on the dashboard.</p>
+<p><b>What is not here on purpose.</b> Backend disk latency, compaction, defragmentation and leader elections are managed and not customer-tunable; the dashboard shows the API server's view (<i>Etcd Request Latency</i>, errors, size) because that view is both observable and actionable through client behaviour.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="front">
+<div class="chapter-head"><span class="kicker" style="color:var(--webhook)">06 · The front door and the webhooks</span><h2>Before the handler runs, and before storage is touched, two other kinds of code get a say.</h2><p class="intro">Identity checks run first: a TLS handshake, then authentication, then authorisation, then a chain of filters. For writes, admission webhooks run next, and they are code you installed, not the API server. The dashboard separates each so a slow or failing stage has a name.</p></div>
+<div class="scene">
+<span class="label">Scene · the stages before storage · pick what goes wrong</span>
+<div class="controls" style="margin-top:12px" id="front-controls"><button type="button" data-mode="healthy" aria-pressed="true">Healthy</button><button type="button" data-mode="tokens">Expired tokens</button><button type="button" data-mode="slowhook">A slow webhook</button><button type="button" data-mode="failclosed">A webhook failing closed</button></div>
+<svg id="front-scene" viewBox="0 0 1000 320" role="img" aria-label="A chain of stages from TLS to storage with a strip of response codes beneath; the failing or slow stage is marked"></svg>
+<p class="caption" id="front-caption"></p>
+<div class="readouts">
+<div class="readout"><small>Authentication</small><b id="ro-fr-auth" style="font-size:22px">ok</b><span id="ro-fr-auth-s">failures quiet</span></div>
+<div class="readout"><small>Webhook p90</small><b id="ro-fr-hook" style="font-size:22px">40 ms</b><span id="ro-fr-hook-s">flat</span></div>
+<div class="readout"><small>Codes clients see</small><b id="ro-fr-code" style="font-size:22px">2xx</b><span id="ro-fr-code-s"></span></div>
+<div class="readout"><small>total − SLI</small><b id="ro-fr-gap" style="font-size:22px">≈ 0</b><span id="ro-fr-gap-s">the two clocks agree</span></div>
+</div>
+</div>
+<div class="three">
+<div class="mini"><h3>A 401 proves the request arrived</h3><p>A 401 with an empty user is authentication; a 403 with a named user is authorisation; no record at all means it never reached the server. The source address and user agent survive a 401, so the caller stays attributable.</p></div>
+<div class="mini"><h3>A round number is a limit, not a measurement</h3><p>Latency pinned at exactly 1 s, 10 s or 30 s means some timeout fired. It does not say whose: the handler's, the webhook's, or the cache's freshness wait all produce the shape. The webhook panel, by name, is what attributes it.</p></div>
+<div class="mini"><h3>Three ways a webhook hurts</h3><p>It can be slow (writes wait, 504s on timeout). It can hold seats (a fairness level saturates and sheds 429s). It can fail closed (every CREATE is refused and no pod ever reaches Pending). Each shows on a different row.</p></div>
+</div>
+<p class="lesson">Identity, filters and webhooks each add time before the handler runs. The webhooks are the only stage the SLI leaves out and the only stage you installed yourself.<small>When total and SLI split on writes and the fairness queue is quiet, the webhook panel will have the name.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The <i>Admission &amp; AuthN/Z (working-copy additions)</i> row, plus the webhook and outbound-error panels from the top of the dashboard.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Authentication attempts by result</span><span class="pw">Admission &amp; AuthN/Z</span></div><svg data-chart="authn"></svg><p class="pr"><b>Read it:</b> successes should track traffic. <code>failure</code> rising is credentials being rejected (expired tokens, a rotated identity); <code>error</code> rising is the authenticator itself in trouble. The two have different owners.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Admission Webhook Admission Duration -Top 4</span><span class="pw">top of dashboard</span></div><svg data-chart="webhook"></svg><p class="pr"><b>Read it:</b> the four slowest webhooks by name at p90. A line that rises and stays up adds that delay to every write it is registered for. A line pinned flat at a round number is a timeout being hit on every call.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Request filter duration p99 by filter</span><span class="pw">Admission &amp; AuthN/Z</span></div><svg data-chart="filters"></svg><p class="pr"><b>Read it:</b> the time each pre-handler filter took: audit, authentication, authorisation, impersonation, priority and fairness. They should sit in a quiet band together. One filter separating from the rest is the stage that added the latency; the fairness filter separating is queue wait seen from a second angle.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: AuthN / AuthZ duration, TLS and aborts, outbound client errors, and the webhook evidence chain</summary><div class="body">
+<p><b>AuthN / AuthZ duration p99.</b> Two lines. Authentication alone rising points at the authenticator path (token review, identity provider); authorisation alone rising points at policy evaluation.</p>
+<p><b>TLS handshake errors + request aborts.</b> Handshake errors are clients failing before any request exists (certificate, protocol, or a connection cut short). Aborts, by verb, are requests the server stopped mid-flight. Both are expected to be empty.</p>
+<p><b>API server outbound client errors (rest_client, non-2xx).</b> The API server is itself a client of webhooks and aggregated APIs. Non-2xx responses here, especially 5xx, mean a dependency you installed is failing, which is the mechanism behind cascading 500s on the resources it serves.</p>
+<p><b>Establishing that a webhook is the cause.</b> A 504 with <code>context deadline exceeded</code> on a write; the webhook's name in the duration panel; the configured timeout visible in the failing request's URL (<code>?timeout=10s</code>); and, for fail-closed, a workload with zero Pending pods because the CREATEs never got far enough to schedule. Search the audit log by shape (verb, resource, code), not by rank within the hour you were paged for; the evidence is often in a different verb or an earlier hour.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="process">
+<div class="chapter-head"><span class="kicker" style="color:var(--grey)">07 · The process itself</span><h2>Instances should move together. The one that does not is the story.</h2><p class="intro">Behind the request path is an ordinary process: memory full of cached objects, CPU spent encoding and decoding, threads parked on slow calls, a count of requests in flight, and a count of requests it gave up on. The dashboard draws these per instance so that one diverging line stands out.</p></div>
+<div class="scene">
+<span class="label">Scene · three API server instances, side by side · pick what happens</span>
+<div class="controls" style="margin-top:12px" id="proc-controls"><button type="button" data-mode="quiet" aria-pressed="true">Quiet</button><button type="button" data-mode="liststorm">LIST storm on one instance</button><button type="button" data-mode="blocked">Blocked on a slow dependency</button><button type="button" data-mode="shed">Shedding load</button></div>
+<svg id="proc-scene" viewBox="0 0 1000 320" role="img" aria-label="Three instance cards, each with bars for memory, CPU, threads and in-flight requests and a terminations counter"></svg>
+<p class="caption" id="proc-caption"></p>
+<div class="readouts">
+<div class="readout"><small>Memory</small><b id="ro-pr-mem" style="font-size:22px">aligned</b><span id="ro-pr-mem-s">plateaus move together</span></div>
+<div class="readout"><small>In flight</small><b id="ro-pr-inf" style="font-size:22px">stable band</b><span id="ro-pr-inf-s">instances track one another</span></div>
+<div class="readout"><small>Terminations</small><b id="ro-pr-term" style="font-size:22px">0</b><span id="ro-pr-term-s">nothing abandoned</span></div>
+<div class="readout"><small>Verdict</small><b id="ro-pr-verdict" style="font-size:16px;line-height:1.3">healthy</b><span id="ro-pr-verdict-s"></span></div>
+</div>
+</div>
+<div class="three">
+<div class="mini"><h3>Memory follows the cache</h3><p>Resident memory is mostly cached objects plus the responses being built. Plateaus that step up with cluster growth are normal. A climb that never flattens, or one instance far from its peers, is a large collection or an unusually heavy client pinned to that instance.</p></div>
+<div class="mini"><h3>Threads ratchet when calls block</h3><p>Go uses operating-system threads sparingly; the count only grows when many calls are parked waiting. A thread count that steps up and does not come back corroborates blocked storage or webhook calls in the same minutes.</p></div>
+<div class="mini"><h3>Terminations count failure. Slowness is not failure.</h3><p>A termination is a request the server abandoned. The counter is the right page. It is also silent on every request that succeeded slowly, which is why the latency panels exist.</p></div>
+</div>
+<p class="lesson">A healthy control plane is three similar lines. Read every per-instance panel for divergence first and level second.<small>A ceiling that all lines flatten against is capacity. One line away from the others is a client, a collection or a dependency that landed on that instance.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>The stat tiles across the top and the process panels in the first group.</span></div>
+<div class="dash-grid">
+<div class="pcard stat"><div class="ph"><span class="pt">Request Terminations · API Pod Memory · Secret Cache Usage · Unavailable Apiservice</span><span class="pw">top of dashboard</span></div><div class="tiles" style="grid-template-columns:repeat(4,1fr)"><div class="tile" style="--c:var(--ok)"><small>Request Terminations</small><b>0 <span style="font-size:13px">/s</span></b></div><div class="tile outline" style="--c:var(--info)"><small>API Pod Memory · 3 instances</small><b style="font-size:20px">6.1 · 6.3 · 6.2 GiB</b></div><div class="tile outline" style="--c:var(--info)"><small>Secret Cache Usage</small><b>100%</b></div><div class="tile" style="--c:var(--ok)"><small>Unavailable Apiservice</small><b style="font-size:20px">empty</b></div></div><p class="pr"><b>Read it:</b> terminations should be empty or flat at zero. Memory should be three similar numbers. The secret cache tile is steady when KMS encryption is on and flat at zero when it is not; repeated collapse and recovery alongside slow Secret reads is the unhealthy shape. Any named APIService in the last tile means an aggregated API (metrics, a custom API) is down, and clients of it, including discovery, are failing.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Total inflight request</span><span class="pw">top of dashboard</span></div><svg data-chart="inflight"></svg><p class="pr"><b>Read it:</b> peak requests in progress per instance. A stable band with instances tracking each other is healthy. One instance diverging is a pinned client; all lines flattening at the same height is a concurrency ceiling, and the fairness row will show the queue.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">apiserver request total</span><span class="pw">top of dashboard</span></div><svg data-chart="reqtotal"></svg><p class="pr"><b>Read it:</b> the five busiest streams by status code, verb and resource. Leaders should change over time. One stream dominating for the whole window is a loop. A stream of 429s is fairness shaping; 5xx concentrated on one resource is a webhook or aggregated API behind that resource; 5xx across every resource is the control plane itself. A blank panel is missing data, not an idle server.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: CPU, Go threads, deprecated APIs</summary><div class="body">
+<p><b>API Server CPU usage in CPU Seconds.</b> Cores consumed per instance. Encoding large LIST responses and decoding storage pages is where the CPU goes. Instances should track one another with visible headroom; one separating is imbalance, a line flattening at a ceiling is throttling.</p>
+<p><b>Max Go Threads.</b> Operating-system threads per instance. Slow change and alignment are healthy; a ratchet upward that does not return corroborates blocked calls.</p>
+<p><b>Deprecated Api Usage Count.</b> Deprecated APIs still being requested, by resource and version. Expected to be empty. Each series is a caller that breaks when that API is removed in an upgrade; it is a client-side fix, and the audit log's 4xx-by-user-agent query names the client.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="walk">
+<div class="chapter-head"><span class="kicker" style="color:var(--ok)">08 · Walk the dashboard</span><h2>Now the dashboard reads as a sequence of questions.</h2><p class="intro">Every chapter added one owner. The dashboard's rows map onto them: two clocks and a request class at the top, then fairness, the cache, storage and admission as the places time can go. Pick an incident and watch the path light up.</p></div>
+<div class="scene">
+<span class="label">Scene · the dashboard's shape · pick what went wrong</span>
+<div class="controls" style="margin-top:12px" id="case-controls"><button type="button" data-case="webhook" aria-pressed="true">Slow writes from a webhook</button><button type="button" data-case="fair" aria-pressed="false">A tenant shaped by fairness</button><button type="button" data-case="watch" aria-pressed="false">Watch reconnect storm</button><button type="button" data-case="selector" aria-pressed="false">Expensive LIST with a selector</button><button type="button" data-case="store" aria-pressed="false">Storage genuinely slow</button><button type="button" data-case="fine" aria-pressed="false">Busy cluster, nothing wrong</button></div>
+<div class="map">
+<svg id="dash-map" viewBox="0 0 640 560" role="img" aria-label="A schematic of the dashboard: four stat tiles, the latency and process group, and the fairness, watch cache, storage and admission rows, with the relevant panels highlighted"></svg>
+<div class="walk" id="walk-steps">
+<div data-k="1"><span class="n">1</span><span><b id="w1t">Two clocks</b><span id="w1s">Do total and SLI split, or move together?</span></span></div>
+<div data-k="2"><span class="n">2</span><span><b id="w2t">Which request class</b><span id="w2s">LIST or not, which resource, which verb; is one class pinned?</span></span></div>
+<div data-k="3"><span class="n">3</span><span><b id="w3t">Which owner</b><span id="w3s">Fairness, webhooks, the cache, or storage: open the row.</span></span></div>
+<div data-k="4"><span class="n">4</span><span><b id="w4t">Who asked</b><span id="w4s">Metrics never carry the user agent. The audit log does.</span></span></div>
+<div data-k="5"><span class="n">5</span><span><b id="w5t">Leave with</b><span id="w5s">a request class, a window, the stage that held it and its owner.</span></span></div>
+</div></div>
+<p class="caption" id="case-caption"></p>
+</div>
+<div class="two">
+<div class="mini"><h3>Use the one variable</h3><p>The dashboard has a single <code>$job</code> selector; everything else is per instance in the legends. When one instance is the story, read its legend entry across every panel before averaging anything.</p></div>
+<div class="mini"><h3>Do not page on rate</h3><p>Request rate and CPU rise with a healthy cluster. Page on terminations, rejections on system levels, storage errors, unavailable APIServices, and total latency that is a large multiple of its own baseline. Everything else explains; it does not alarm.</p></div>
+</div>
+<p class="lesson">Leave with one request class, one window, the stage that held it and the owner of that stage.<small>"The API server was slow" is not a diagnosis. "LIST pods with a label selector from one controller walked 40 objects per returned object from 14:02 to 14:20; storage was idle" is.</small></p>
+</section>
+
+<section class="chapter" id="reference">
+<div class="chapter-head"><span class="kicker" style="color:var(--dim)">Reference · when you need a name</span><h2>Tiles and panels, by row.</h2><p class="intro">The journey above is the learning path. This is the lookup, kept short: what each stat tile shows and what unhealthy looks like, then every panel title in dashboard order. Hover the ⓘ on the dashboard itself for the full text.</p></div>
+<h3 style="margin-bottom:10px">The stat tiles</h3>
+<div class="gloss">
+<div><b><i style="--c:var(--bad)"></i>Request Terminations</b>Rate of requests the server abandoned instead of answering. Healthy: empty or zero. Any sustained rise is clients losing requests inside the control plane.</div>
+<div><b><i style="--c:var(--info)"></i>API Pod Memory</b>Resident memory per instance, mostly cached objects. Healthy: plateaus that move together. Unhealthy: a climb that never flattens, or one instance diverging.</div>
+<div><b><i style="--c:var(--info)"></i>Secret Cache Usage</b>How full each instance's envelope-encryption key cache is. Steady when KMS encryption is on, zero when it is not. Unhealthy: repeated collapse and recovery with slow Secret reads.</div>
+<div><b><i style="--c:var(--bad)"></i>Unavailable Apiservice</b>Aggregated APIs unavailable in the interval, by name. Healthy: empty. Any name means discovery and that API's clients are failing.</div>
+<div><b><i style="--c:var(--info)"></i>Max Go Threads</b>Operating-system threads per instance. Healthy: slow change, aligned. Unhealthy: a ratchet upward that does not return, corroborating blocked storage or webhook calls.</div>
+<div><b><i style="--c:var(--warn)"></i>Deprecated Api Usage Count</b>Deprecated APIs still being requested, by resource and version. Healthy: empty. Each series is a caller that breaks on removal.</div>
+<div><b><i style="--c:var(--fair)"></i>Effective seat limit (post-lending) vs guaranteed floor</b>Per priority level: the seat ceiling after borrowing beside the guaranteed floor. Unhealthy: the ceiling collapses towards the floor while the level queues.</div>
+<div><b><i style="--c:var(--fair)"></i>Requests inqueue</b>Requests waiting for a seat, per level. Healthy: zero or brief spikes that drain. A persistent queue is fairness adding client-visible delay.</div>
+<div><b><i style="--c:var(--fair)"></i>Priority level utilisation (fraction of limit)</b>Mean seat use as a fraction of the effective limit, per level. Unhealthy: approaching 1.0 while queue and wait rise.</div>
+</div>
+<details><summary>Every panel, in dashboard order</summary><div class="body pindex">
+<h4>Top of the dashboard</h4><ul><li><b>Request Terminations</b> · <b>API Pod Memory</b> · <b>Secret Cache Usage</b> · <b>Unavailable Apiservice</b> (stat tiles)</li><li><b>List Latency</b> (p95 by resource, with SLI twin)</li><li><b>Non List Latency</b> (p95 by verb and resource, with SLI twin)</li><li><b>Etcd Request Latency</b> (p95 by operation)</li><li><b>Slowest Requests (P90) - 5min</b> (top 3 classes)</li><li><b>Total inflight request</b> (per instance)</li><li><b>API server outbound client errors (rest_client, non-2xx)</b></li><li><b>API Server CPU usage in CPU Seconds</b></li><li><b>Admission Webhook Admission Duration -Top 4</b> (p90 by webhook name)</li><li><b>apiserver request total</b> (top 5 by code, verb, resource)</li><li><b>Max Go Threads</b> · <b>Deprecated Api Usage Count</b> (stat tiles)</li></ul>
+<h4>Advanced Priority and Fairness</h4><ul><li><b>Effective seat limit (post-lending) vs guaranteed floor</b> · <b>Requests inqueue</b> · <b>Priority level utilisation (fraction of limit)</b> (stat tiles)</li><li><b>Top executing requests by Flow</b></li><li><b>Time Request was in queue by flowschema (p90) - Top Instance</b></li><li><b>Rejected Requests -2m</b> (by flow schema and reason)</li><li><b>Flowcontrol request execution time p90 - Top Instance</b></li><li><b>Rate of addition per second</b> (queue arrivals)</li></ul>
+<h4>Watch Cache &amp; Staleness (working-copy additions)</h4><ul><li><b>Consistent reads: cache vs fallback-to-etcd</b></li><li><b>Terminated watchers by resource</b></li><li><b>Watch cache init events by resource (reconnect replay cost)</b></li><li><b>Active watches by resource (top 10)</b></li><li><b>Watch events: received from etcd vs dispatched to watchers</b></li><li><b>LIST waste factor (objects walked per object returned)</b></li></ul>
+<h4>Storage — the client view (working-copy additions)</h4><ul><li><b>Storage DB size (client-reported)</b></li><li><b>Stored objects by resource (top 10)</b></li><li><b>etcd client errors by operation/resource</b></li><li><b>Storage LIST duration p99 by resource</b></li><li><b>Response sizes p99 (LIST, by resource)</b></li></ul>
+<h4>Admission &amp; AuthN/Z (working-copy additions)</h4><ul><li><b>Authentication attempts by result</b></li><li><b>AuthN / AuthZ duration p99</b></li><li><b>TLS handshake errors + request aborts</b></li><li><b>Request filter duration p99 by filter</b></li><li><b>SLI vs total request duration p99 (non-WATCH)</b></li></ul>
+</div></details>
+</section>
+
+<footer><strong>Where did the request spend its time? · A visual journey</strong>Prepared by Shane Corbett · Kubernetes Specialist · <a href="mailto:shancor@amazon.com">shancor@amazon.com</a><br>Please retain author attribution when sharing or adapting this guide or the dashboard it accompanies.<br>First edition · 29 October 2026 · Charts are illustrative shapes, not recordings from a cluster. Companion to the dashboard <i>API Server Troubleshooter (Working Copy)</i>; mechanics follow the repository's <i>API Server Diagnostics Guide</i> and control-plane troubleshooting methodology.</footer>
+</main></div>
+<script>
+(function(){
+"use strict";
+const C={client:'#5B9BF8',apiserver:'#F5B83D',storage:'#E07B24',webhook:'#A78BFA',fair:'#2DD4BF',ok:'#3FB950',warn:'#FADE2A',bad:'#F2495C',info:'#8AB8FF',grey:'#5B6B85',ink:'#e8eef4',muted:'#9fb0c0',dim:'#6f8396',line:'#2a3948',card:'#0a1016'};
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+let seed=7;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+function series(n,base,noise){const a=[];for(let i=0;i<n;i++)a.push(Math.max(0,base+(rnd()-.5)*2*noise));return a;}
+function bump(a,i0,i1,peak,shape){for(let i=i0;i<=i1&&i<a.length;i++){const t=(i-i0)/Math.max(1,i1-i0);const f=shape==='flat'?1:Math.sin(Math.PI*t);a[i]+=peak*f;}return a;}
+function fmt(v,u){if(u==='%')return Math.round(v)+'%';if(u==='ms')return Math.round(v)+' ms';if(u==='x')return (v>=10?Math.round(v):v.toFixed(1))+'×';if(u==='k')return (v>=1000?(v/1000).toFixed(1)+'M':Math.round(v)+'k');if(u==='s')return (v>=10?Math.round(v):v.toFixed(1))+' s';if(u==='MiB')return v>=1024?(v/1024).toFixed(1)+' GiB':Math.round(v)+' MiB';if(u==='/s')return Math.round(v)+'/s';return Math.round(v);}
+
+/* ---------- generic chart ---------- */
+function chart(svg,s){
+  clear(svg);const W=s.w||600,H=s.h||240,L=s.padL||48,R=12,T=14,B=48;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);
+  const pw=W-L-R,ph=H-T-B;const ymin=s.ymin||0;
+  let ymax=s.ymax;if(ymax==null){ymax=0;const stacks=[];s.series.forEach(se=>se.data.forEach((v,i)=>{if(v==null)return;if(se.bars&&s.stack){stacks[i]=(stacks[i]||0)+v;ymax=Math.max(ymax,stacks[i]);}else ymax=Math.max(ymax,v);}));(s.thresholds||[]).forEach(t=>ymax=Math.max(ymax,t.y*1.1));ymax*=1.12;if(s.unit==='')ymax=Math.ceil(ymax/4)*4;}
+  const Y=v=>T+ph-(v-ymin)/(ymax-ymin)*ph;const n=Math.max(...s.series.map(se=>se.data.length));const X=i=>L+i/(n-1)*pw;
+  for(let g=0;g<=4;g++){const v=ymin+(ymax-ymin)*g/4;el('line',{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:C.line,'stroke-width':1},svg);el('text',{x:L-6,y:Y(v)+4,'text-anchor':'end',fill:C.dim,'font-size':11},svg,fmt(v,s.unit));}
+  (s.xl||['6 h ago','3 h ago','now']).forEach((t,i,a)=>el('text',{x:L+i/(a.length-1)*pw,y:H-B+16,'text-anchor':i===0?'start':i===a.length-1?'end':'middle',fill:C.dim,'font-size':11},svg,t));
+  const stackBase=new Array(n).fill(0);const bw=pw/n*0.72;
+  s.series.filter(se=>se.bars).forEach(se=>{se.data.forEach((v,i)=>{if(!v)return;const b=s.stack?stackBase[i]:0;const y1=Y(b+v),y0=Y(b);el('rect',{x:X(i)-bw/2,y:y1,width:bw,height:Math.max(1,y0-y1),fill:se.color,opacity:.85},svg);if(s.stack)stackBase[i]+=v;});});
+  s.series.filter(se=>!se.bars).forEach(se=>{let d='',area='';let started=false,segStart=null;const pts=se.data;
+    pts.forEach((v,i)=>{if(v==null){if(started){d+='';}started=false;return;}const x=X(i),y=Y(Math.min(v,ymax));if(!started){d+=`M${x} ${y}`;started=true;segStart=i;}else d+=` L${x} ${y}`;});
+    if(se.fill){let fa='';let on=false,first=null,last=null;pts.forEach((v,i)=>{if(v==null){if(on){fa+=` L${X(last)} ${Y(ymin)} Z`;on=false;}return;}if(!on){fa+=`M${X(i)} ${Y(ymin)} L${X(i)} ${Y(Math.min(v,ymax))}`;on=true;}else fa+=` L${X(i)} ${Y(Math.min(v,ymax))}`;last=i;});if(on)fa+=` L${X(last)} ${Y(ymin)} Z`;el('path',{d:fa,fill:se.color,opacity:.12},svg);}
+    el('path',{d,fill:'none',stroke:se.color,'stroke-width':se.width||2,'stroke-dasharray':se.dash?'6 4':'none','stroke-linejoin':'round','stroke-linecap':'round'},svg);});
+  (s.gaps||[]).forEach(g=>{el('rect',{x:X(g[0]),y:T,width:X(g[1])-X(g[0]),height:ph,fill:'url(#hatch)',opacity:.7},svg);});
+  (s.thresholds||[]).forEach(t=>{el('line',{x1:L,x2:W-R,y1:Y(t.y),y2:Y(t.y),stroke:t.color,'stroke-width':1.5,'stroke-dasharray':'5 4',opacity:.9},svg);if(t.label)el('text',{x:W-R-4,y:Y(t.y)-4,'text-anchor':'end',fill:t.color,'font-size':11.5},svg,t.label);});
+  (s.annots||[]).forEach(a=>{const x=X(a.i),y=Y(Math.min(a.y,ymax));const dx=a.dx==null?40:a.dx,dy=a.dy==null?-30:a.dy;el('circle',{cx:x,cy:y,r:4,fill:'none',stroke:C.warn,'stroke-width':2},svg);el('line',{x1:x,y1:y,x2:x+dx*0.85,y2:y+dy*0.85,stroke:C.warn,'stroke-width':1.2},svg);const lines=a.text.split('\n');const tw=Math.max(...lines.map(l=>l.length))*6.1+14;let tx=x+dx,ty=y+dy;if(tx+tw>W-R)tx=W-R-tw;if(tx<L)tx=L;if(ty-12<T)ty=T+12;if(ty+lines.length*15>H-B)ty=H-B-lines.length*15;el('rect',{x:tx-6,y:ty-13,width:tw,height:lines.length*15+8,rx:4,fill:'#0a1016',stroke:C.warn,'stroke-width':1},svg);lines.forEach((l,k)=>el('text',{x:tx,y:ty+k*15,fill:C.ink,'font-size':12},svg,l));});
+  if(s.legend!==false){let lx=L,ly=H-16;s.series.forEach(se=>{if(se.hideLegend)return;const w=se.name.length*6+24;if(lx+w>W-R){lx=L;ly+=13;}el('rect',{x:lx,y:ly-4,width:12,height:se.dash?2:4,fill:se.color},svg);el('text',{x:lx+16,y:ly+1,fill:C.muted,'font-size':11},svg,se.name);lx+=w;});}
+}
+function hbars(svg,rows,maxv,unit,W=600){clear(svg);const H=160;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);rows.forEach((r,i)=>{const y=22+i*42;el('text',{x:14,y:y+18,fill:C.muted,'font-size':12.5},svg,r.name);el('rect',{x:190,y:y,width:380,height:26,rx:5,fill:'#1a2430'},svg);el('rect',{x:190,y:y,width:380*r.v/maxv,height:26,rx:5,fill:r.color},svg);el('text',{x:190+380*r.v/maxv+8,y:y+18,fill:C.ink,'font-size':13,'font-weight':600},svg,r.v+(unit||''));});}
+function table(svg,head,rows,W=600){clear(svg);const H=170;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);const cols=W>700?[14,W*0.4,W*0.7]:[14,290,470];head.forEach((h,i)=>el('text',{x:cols[i],y:24,fill:C.dim,'font-size':11.5,'font-weight':600},svg,h));el('line',{x1:10,x2:W-10,y1:34,y2:34,stroke:C.line},svg);rows.forEach((r,ri)=>{const y=56+ri*28;r.forEach((c,i)=>el('text',{x:cols[i],y,fill:i===2?C.warn:C.ink,'font-size':12.5,'font-family':i===0?'ui-monospace,Menlo,monospace':'inherit'},svg,c));});}
+
+/* ---------- chart specs ---------- */
+const N=36;
+const specs={
+ slitotal(){seed=11;const sli=series(N,0.35,0.08);const tot=sli.map(v=>v+0.05+rnd()*0.05);bump(tot,16,27,1.9);return{unit:'s',ymax:2.6,series:[{name:'total (what clients feel)',color:C.client,width:2.4,data:tot},{name:'SLI (what the control plane did)',color:C.apiserver,dash:true,data:sli}],annots:[{i:21,y:2.3,text:'gap = queue wait + webhooks;\nSLI stays flat',dx:-200,dy:0}]};},
+ nonlist(){seed=12;const a=series(N,0.12,0.03),b=series(N,0.2,0.04),c=series(N,0.18,0.03),cs=series(N,0.17,0.03);bump(c,18,30,0.9);return{unit:'s',ymax:1.3,series:[{name:'Verb-PATCH / Resource-pods',color:C.webhook,width:2.2,data:c},{name:'PATCH/pods (SLI)',color:C.webhook,dash:true,data:cs},{name:'Verb-GET / Resource-pods',color:C.client,data:a},{name:'Verb-UPDATE / Resource-leases',color:C.muted,data:b}],thresholds:[{y:1,color:C.warn,label:'1 s, single-object SLO'}],annots:[{i:24,y:1.08,text:'one PATCH path pulls away\nfrom its SLI twin: admission',dx:-230,dy:-10}]};},
+ slowest(){seed=13;const a=series(N,6,1.2),b=series(N,2.2,0.6),c=series(N,1.4,0.4);return{unit:'s',ymax:9,w:900,series:[{name:'pods · LIST · cluster',color:C.apiserver,width:2.4,data:a},{name:'secrets · LIST · namespace',color:C.storage,data:b},{name:'nodes · PATCH',color:C.muted,data:c}],annots:[{i:14,y:6.5,text:'pinned above the rest all window:\ncarry this class forward',dx:60,dy:-20}]};},
+ listlat(){seed=14;const p=series(N,1.8,0.3),ps=series(N,1.6,0.3),s=series(N,0.9,0.2),e=series(N,0.4,0.1);bump(p,20,33,9);bump(ps,20,33,8.4);return{unit:'s',ymax:14,series:[{name:'pods',color:C.apiserver,width:2.4,data:p},{name:'pods (SLI)',color:C.apiserver,dash:true,data:ps},{name:'secrets',color:C.storage,data:s},{name:'endpointslices',color:C.muted,data:e}],annots:[{i:27,y:11,text:'one resource alone, SLI moving with it:\nnot a queue or webhook; the LIST itself',dx:-290,dy:-8}]};},
+ etcdlat(){seed=15;const c=series(N,22,4),u=series(N,18,3),g=series(N,6,1),l=series(N,30,5);bump(l,20,33,180);return{unit:'ms',ymax:240,series:[{name:'list',color:C.storage,width:2.4,data:l},{name:'create',color:C.muted,data:c},{name:'update',color:C.dim,data:u},{name:'get',color:C.client,data:g}],annots:[{i:27,y:205,text:'list only: expensive collections.\nA shared step across all four\nwould be the store',dx:-250,dy:-10}]};},
+ storlist(){seed=16;const p=series(N,1.2,0.3),s=series(N,0.6,0.15),cm=series(N,0.3,0.08);bump(p,20,33,8);return{unit:'s',ymax:12,w:900,series:[{name:'pods',color:C.apiserver,width:2.4,data:p},{name:'secrets',color:C.storage,data:s},{name:'configmaps',color:C.muted,data:cm}],annots:[{i:27,y:9.5,text:'storage-side LIST of pods: 9 s while one etcd page\nstayed near 200 ms. The cost is in paging and decode.',dx:-480,dy:-10}]};},
+ queuewait(){seed=17;const w=series(N,0.02,0.01),g=series(N,0.01,0.005);bump(w,14,26,2.4);return{unit:'s',ymax:3.2,series:[{name:'workload-low · tenant-controllers',color:C.fair,width:2.4,data:w},{name:'workload-high · kube-system-sa',color:C.muted,data:g}],annots:[{i:20,y:2.5,text:'2.4 s waiting for a seat:\nfairness, not execution',dx:-210,dy:-10}]};},
+ rejected(){const a=new Array(N).fill(0);[18,19,20,21,22,23,24].forEach((i,k)=>a[i]=[6,22,41,38,26,12,3][k]);const b=new Array(N).fill(0);b[21]=4;b[22]=7;return{unit:'',stack:true,series:[{name:'tenant-controllers - queue-full',color:C.fair,bars:true,data:a},{name:'tenant-controllers - time-out',color:C.bad,bars:true,data:b}],annots:[{i:20,y:44,text:'a tenant level shaping its own traffic:\nworking as designed, fix on the client',dx:-280,dy:0}]};},
+ executing(){seed=18;const a=series(N,6,1.5),b=series(N,4,1),c=series(N,3,0.8),d=series(N,2,0.6);bump(a,14,26,26,'flat');return{unit:'',ymax:40,w:900,series:[{name:'tenant-controllers · workload-low · ip-10-0-1-21',color:C.fair,width:2.4,data:a.map(Math.round)},{name:'kube-system-service-accounts · workload-high',color:C.muted,data:b.map(Math.round)},{name:'system-nodes · system',color:C.dim,data:c.map(Math.round)},{name:'service-accounts · workload-low',color:C.client,data:d.map(Math.round)}],annots:[{i:20,y:33,text:'one flow holds most of the level\'s seats\nwhile that level queues',dx:70,dy:-10}]};},
+ fanout(){seed=19;const r=series(N,120,15);const d=r.map(v=>v*420);bump(d,22,34,60000,'flat');return{unit:'k',ymax:140,series:[{name:'dispatched to watchers (per second)',color:C.apiserver,width:2.4,data:d.map(v=>v/1000)},{name:'received from etcd (per second)',color:C.storage,width:2.4,data:r.map(v=>v/1000)}],annots:[{i:28,y:112,text:'dispatched steps up while received stays\nflat at ~120/s along the bottom:\nmore watchers, not more change',dx:-300,dy:10},{i:10,y:0.12,text:'received: ~120 events/s',dx:30,dy:-40}]};},
+ initev(){seed=20;const p=series(N,40,12),n=series(N,10,4),s=series(N,15,5);bump(p,21,25,4200);return{unit:'/s',ymax:5000,series:[{name:'pods',color:C.apiserver,width:2.4,data:p},{name:'nodes',color:C.muted,data:n},{name:'secrets',color:C.storage,data:s}],annots:[{i:23,y:4300,text:'reconnect storm on pods:\nevery new watcher replays the collection',dx:-300,dy:10}]};},
+ waste(){seed=21;const w=series(N,1.4,0.2);bump(w,10,N-1,38,'flat');return{unit:'x',ymax:50,w:900,series:[{name:'walked / returned',color:C.apiserver,width:2.4,data:w}],thresholds:[{y:1,color:C.ok,label:'1: returns what it walks'}],annots:[{i:20,y:40,text:'40 objects evaluated per object returned:\na selector over a large collection',dx:60,dy:-10}]};},
+ objects(){seed=22;const p=series(N,41000,300),e=series(N,9000,800),l=series(N,2100,20),s=series(N,6200,50),cm=series(N,4800,40);for(let i=0;i<N;i++)e[i]+=i*900;return{unit:'k',ymax:60,series:[{name:'pods',color:C.client,data:p.map(v=>v/1000)},{name:'events',color:C.bad,width:2.4,data:e.map(v=>v/1000)},{name:'secrets',color:C.storage,data:s.map(v=>v/1000)},{name:'configmaps',color:C.muted,data:cm.map(v=>v/1000)},{name:'leases',color:C.dim,data:l.map(v=>v/1000)}],annots:[{i:30,y:36,text:'events climbing without a plateau:\nsomething is emitting and nothing is pruning',dx:-330,dy:-20}]};},
+ etcderr(){const a=new Array(N).fill(0);[24,25,26,27].forEach((i,k)=>a[i]=[2,5,4,1][k]);return{unit:'',stack:true,series:[{name:'create leases',color:C.storage,bars:true,data:a},{name:'update pods',color:C.bad,bars:true,data:new Array(N).fill(0)}],annots:[{i:25,y:5.2,text:'storage-layer failures: distinct from\nfairness rejections, which never try',dx:-280,dy:-5}]};},
+ respsize(){seed=23;const p=series(N,180,10),s=series(N,22,3),n=series(N,60,4);for(let i=18;i<N;i++)p[i]+=(i-18)*12;return{unit:'MiB',ymax:450,w:900,series:[{name:'pods',color:C.client,width:2.4,data:p},{name:'nodes',color:C.muted,data:n},{name:'secrets',color:C.storage,data:s}],annots:[{i:32,y:360,text:'LIST pods grew from 180 to 350 MiB:\nmore objects or bigger ones; every client decodes it',dx:-420,dy:-10}]};},
+ authn(){seed=24;const ok=series(N,420,30),f=series(N,2,1),e=series(N,0,0.3);bump(f,15,28,160,'flat');return{unit:'/s',ymax:600,series:[{name:'success',color:C.ok,data:ok},{name:'failure',color:C.bad,width:2.4,data:f},{name:'error',color:C.warn,data:e}],annots:[{i:21,y:165,text:'failure, not error: credentials rejected,\nnot the authenticator broken',dx:-230,dy:-30}]};},
+ webhook(){seed=25;const a=series(N,0.04,0.01),b=series(N,0.06,0.015),c=series(N,0.03,0.008),d=series(N,0.12,0.02);bump(d,16,30,9.88,'flat');return{unit:'s',ymax:12,series:[{name:'policy-validator.example',color:C.webhook,width:2.4,data:d},{name:'sidecar-injector',color:C.muted,data:b},{name:'cert-manager-webhook',color:C.dim,data:a},{name:'opa-gatekeeper',color:C.client,data:c}],thresholds:[{y:10,color:C.bad,label:'10 s: the configured timeout'}],annots:[{i:23,y:10,text:'pinned at a round number: the\ntimeout fires on every call',dx:-240,dy:20}]};},
+ filters(){seed=26;const au=series(N,0.8,0.15),an=series(N,3,0.5),az=series(N,1.2,0.2),im=series(N,0.3,0.05),pf=series(N,2,0.4);bump(pf,14,26,2400);return{unit:'ms',ymax:3000,w:900,series:[{name:'priorityandfairness',color:C.fair,width:2.4,data:pf},{name:'authentication',color:C.apiserver,data:an},{name:'authorization',color:C.muted,data:az},{name:'audit',color:C.dim,data:au},{name:'impersonation',color:C.client,data:im}],annots:[{i:20,y:2500,text:'one filter separates: the fairness filter is\nqueue wait seen from a second angle',dx:70,dy:-10}]};},
+ inflight(){seed=27;const a=series(N,210,20),b=series(N,205,20),c=series(N,215,20);bump(c,18,32,380,'flat');return{unit:'',ymax:700,series:[{name:'ip-10-0-1-21',color:C.apiserver,width:2.4,data:c.map(Math.round)},{name:'ip-10-0-2-45',color:C.muted,data:a.map(Math.round)},{name:'ip-10-0-3-12',color:C.dim,data:b.map(Math.round)}],annots:[{i:25,y:600,text:'one instance diverges: a client\'s\nconnections landed there',dx:-240,dy:0}]};},
+ reqtotal(){seed=28;const a=series(N,120,15),b=series(N,80,10),c=series(N,60,8),d=series(N,40,6),e=new Array(N).fill(0);bump(e,18,27,70,'flat');return{unit:'/s',ymax:220,w:900,series:[{name:'pods - verb: LIST - code: 200',color:C.client,data:a},{name:'leases - verb: UPDATE - code: 200',color:C.muted,data:b},{name:'pods - verb: WATCH - code: 200',color:C.dim,data:c},{name:'nodes - verb: PATCH - code: 200',color:C.apiserver,data:d},{name:'pods - verb: LIST - code: 429',color:C.bad,width:2.4,data:e}],annots:[{i:22,y:72,text:'a stream of 429s on one class:\nfairness shaping that caller',dx:60,dy:-30}]};}
+};
+document.querySelectorAll('svg[data-chart]').forEach(svg=>{const f=specs[svg.dataset.chart];if(!f){console.error('no spec',svg.dataset.chart);return;}const s=f();if(svg.closest('.pcard.wide'))s.w=s.w||900;chart(svg,s);});
+
+/* ---------- helpers for scenes ---------- */
+function wrap(parent,text,x,y,maxc,attrs){const words=text.split(' ');let line='',lines=[];words.forEach(w=>{if((line+' '+w).length>maxc){lines.push(line);line=w;}else line=line?line+' '+w:w;});lines.push(line);lines.forEach((l,i)=>el('text',Object.assign({x,y:y+i*14},attrs),parent,l));return lines.length;}
+function setRO(id,v,sub,col){const e=document.getElementById(id);if(e){e.textContent=v;if(col)e.style.setProperty('--v',col);else e.style.removeProperty('--v');}const s=document.getElementById(id+'-s');if(s&&sub!=null)s.textContent=sub;}
+function press(sel,attr,k){document.querySelectorAll(sel+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset[attr]===k)));}
+
+/* ---------- 01 request path ---------- */
+const pathSvg=document.getElementById('path-scene');
+const stages=[
+ {name:'Arrive',sub:'TLS, connection',col:C.client,sli:false,owner:['the client','and the network between'],sliS:'not yet inside the server',panel:['TLS handshake errors + request aborts','Admission & AuthN/Z row'],text:'The controller opens (or reuses) a TLS connection and sends the request. Nothing inside the server has started. A handshake error or a connection cut here leaves no latency at all, only an error count: the request never arrived.'},
+ {name:'Identify',sub:'authenticate, authorise',col:C.apiserver,sli:true,owner:['the API server','and the identity provider it asks'],sliS:'the server\'s own filters',panel:['AuthN / AuthZ duration p99','Request filter duration p99 by filter'],text:'Who is this, and may they do this? Authentication produces a user; authorisation checks policy. Both are normally milliseconds. A token that fails here produces a 401 with an empty user, which is proof the request arrived.'},
+ {name:'Wait for a seat',sub:'priority and fairness',col:C.fair,sli:false,owner:['priority and fairness','per instance, by priority level'],sliS:'queue wait is excluded on purpose',panel:['Time Request was in queue by flowschema (p90) - Top Instance','Advanced Priority and Fairness row'],text:'The request is classified into a flow and a priority level. If that level has a free seat on this instance it proceeds at once; otherwise it waits in a queue. This wait is in the total the client feels and not in the SLI.'},
+ {name:'Admission',sub:'webhooks, validation',col:C.webhook,sli:false,owner:['your webhooks','mutating, then validating'],sliS:'webhook execution is excluded',panel:['Admission Webhook Admission Duration -Top 4','top of the dashboard'],text:'For writes, mutating webhooks run first and may change the object; validating webhooks then accept or reject it. Each is a network call to a service you installed, with its own timeout. This is the second stage the SLI leaves out.'},
+ {name:'Storage',sub:'read or write etcd',col:C.storage,sli:true,owner:['the storage layer','and etcd behind it'],sliS:'storage time counts',panel:['Etcd Request Latency','and the Storage row'],text:'A write goes to etcd once. A read is usually answered from the watch cache; a LIST that demands the latest state, or a cache that cannot prove it is fresh, goes to etcd page by page. This is where chapter 02\'s ladder lives.'},
+ {name:'Respond',sub:'encode, send',col:C.apiserver,sli:true,owner:['the API server','and the client reading it'],sliS:'encoding counts; a slow reader stretches it',panel:['Response sizes p99 (LIST, by resource)','Storage row'],text:'The result is encoded and written to the connection. Encoding and writing are interleaved, so a client that reads slowly makes this stage look like slow encoding. For a large LIST, this is where the bytes in the Response sizes panel are produced.'}];
+function drawPath(k){clear(pathSvg);const st=stages[k];const x0=30,bw=140,gap=20,y=50,h=78;
+ stages.forEach((s,i)=>{const x=x0+i*(bw+gap);const on=i===k;el('rect',{x,y,width:bw,height:h,rx:12,fill:on?'#1f2b3a':'#17222e',stroke:s.col,'stroke-width':on?2.6:1.4,opacity:on?1:.75},pathSvg);el('text',{x:x+bw/2,y:y+32,'text-anchor':'middle',fill:s.col,'font-size':15,'font-weight':650},pathSvg,s.name);el('text',{x:x+bw/2,y:y+54,'text-anchor':'middle',fill:C.muted,'font-size':11.5},pathSvg,s.sub);if(i<stages.length-1)el('path',{d:`M${x+bw+2} ${y+h/2} H${x+bw+gap-4}`,stroke:C.muted,'stroke-width':2,'marker-end':'url(#arr)',fill:'none'},pathSvg);if(on)el('path',{d:`M${x+bw/2} ${y-6} l-7 -12 h14 z`,fill:C.warn},pathSvg);});
+ const span=(i)=>[x0+i*(bw+gap),x0+i*(bw+gap)+bw];
+ el('text',{x:x0,y:178,fill:C.client,'font-size':12.5,'font-weight':600},pathSvg,'total · what the client feels');el('text',{x:x0+205,y:178,fill:C.dim,'font-size':11.5},pathSvg,'(apiserver_request_duration_seconds, from the moment the server reads the request)');
+ el('rect',{x:span(1)[0],y:186,width:span(5)[1]-span(1)[0],height:16,rx:4,fill:C.client,opacity:.9},pathSvg);el('rect',{x:span(0)[0],y:186,width:bw,height:16,rx:4,fill:'url(#hatch)'},pathSvg);el('text',{x:span(0)[0]+bw/2,y:215,'text-anchor':'middle',fill:C.dim,'font-size':10.5},pathSvg,'before the clock starts');
+ el('text',{x:x0,y:232,fill:C.apiserver,'font-size':12.5,'font-weight':600},pathSvg,'SLI · what the control plane did');el('text',{x:x0+228,y:232,fill:C.dim,'font-size':11.5},pathSvg,'(apiserver_request_sli_duration_seconds: skips the seat wait and the webhooks)');
+ stages.forEach((s,i)=>{const [a,b]=span(i);if(i===0)return;if(s.sli)el('rect',{x:a,y:240,width:b-a,height:16,rx:4,fill:C.apiserver,opacity:.9},pathSvg);else{el('rect',{x:a,y:240,width:b-a,height:16,rx:4,fill:'none',stroke:s.col,'stroke-dasharray':'4 3'},pathSvg);el('text',{x:(a+b)/2,y:252,'text-anchor':'middle',fill:s.col,'font-size':10.5},pathSvg,'excluded');}});
+ if(k>0){const [a,b]=span(k);el('rect',{x:a-4,y:180,width:b-a+8,height:82,rx:8,fill:'none',stroke:C.warn,'stroke-width':1.5,'stroke-dasharray':'5 4'},pathSvg);}
+ el('text',{x:x0,y:290,fill:C.dim,'font-size':11.5},pathSvg,'The gap between the two bars is the time spent in the dashed stages. Chapter 03 owns the seat wait; chapter 06 owns the webhooks.');
+ document.getElementById('path-text').textContent=st.text;setRO('ro-path-owner',st.owner[0],st.owner[1],st.col);setRO('ro-path-sli',st.sli?'Yes':'No',st.sliS,st.sli?C.ok:C.warn);setRO('ro-path-panel',st.panel[0],st.panel[1]);
+ document.querySelectorAll('#path-steps button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.step===k)));}
+document.querySelectorAll('#path-steps button').forEach(b=>b.addEventListener('click',()=>drawPath(+b.dataset.step)));drawPath(0);
+
+/* ---------- 02 LIST ladder ---------- */
+const ladSvg=document.getElementById('ladder-scene');
+const ladder={
+ healthy:{v:[0.42,0.21,0.08],lab:['420 ms','210 ms','80 ms'],owner:['nobody','all three rungs small',C.ok],verdict:['no action','a LIST of pods answered in under half a second',C.ok],panel:['List Latency','stays in its band'],caption:'A healthy LIST of pods. The client sees 420 ms; the storage layer spent 210 ms of that on paging and decoding; one etcd round trip was 80 ms. Each rung is a modest fraction of the one outside it.'},
+ etcd:{v:[12.4,11.6,4.2],lab:['12.4 s','11.6 s','4.2 s per page'],owner:['the store','every rung large together',C.storage],verdict:['storage is slow','and so is everything that waits on it',C.bad],panel:['Etcd Request Latency','a shared step on every operation'],caption:'Every rung is large and the inner ones explain the outer ones. One etcd page takes seconds, three pages make the storage LIST, and the client-observed time is barely more than that. The time is in the store or the path to it. Check writes too: they will have stepped up with the reads.'},
+ decode:{v:[41.7,28.7,0.6],lab:['41.7 s','28.7 s','0.6 s per page'],owner:['the API server','decode, transform, selector walk',C.apiserver],verdict:['the time is not in etcd','it is in the storage layer\'s own work',C.warn],panel:['Storage LIST duration p99 by resource','large while Etcd Request Latency is small'],caption:'A pattern seen in real investigations: 28.7 s of a 41.7 s LIST sat in the storage layer while each etcd round trip stayed under a second. Pages were fast; decoding them, decrypting Secrets or walking a selector across the collection was not. The fix is the request shape or the collection size, not etcd.'},
+ client:{v:[9.1,0.9,0.3],lab:['9.1 s','0.9 s','0.3 s per page'],owner:['the client','or the network to it',C.client],verdict:['the server waited to write','the bottleneck is outside the control plane',C.warn],panel:['Response sizes p99 (LIST, by resource)','a large response, read slowly'],caption:'The client sees 9 s but storage and etcd together explain less than a second. The remaining time is the server writing the response to a client that reads slowly, or a network between them that does. Compare in-cluster callers with remote ones on the same resource: only the remote ones will show it.'}};
+function drawLadder(k){const d=ladder[k];clear(ladSvg);const x0=250,W=700,y0=56,rh=48,gap=24;const max=d.v[0];
+ const rows=[['client-observed','apiserver_request_duration_seconds · LIST',C.client],['storage-side','apiserver_storage_list_duration_seconds',C.apiserver],['one etcd page','etcd_request_duration_seconds · list',C.storage]];
+ rows.forEach((r,i)=>{const y=y0+i*(rh+gap);const w=Math.max(6,W*d.v[i]/max);el('text',{x:x0-14,y:y+20,'text-anchor':'end',fill:r[2],'font-size':14,'font-weight':650},ladSvg,r[0]);el('text',{x:x0-14,y:y+37,'text-anchor':'end',fill:C.dim,'font-size':10.5,'font-family':'ui-monospace,Menlo,monospace'},ladSvg,r[1]);el('rect',{x:x0,y,width:W,height:rh,rx:8,fill:'#141d28'},ladSvg);el('rect',{x:x0,y,width:w,height:rh,rx:8,fill:r[2],opacity:.85},ladSvg);el('text',{x:x0+w+10,y:y+30,fill:C.ink,'font-size':14,'font-weight':600},ladSvg,d.lab[i]);
+  if(i<2){const w2=Math.max(6,W*d.v[i+1]/max);const diff=d.v[i]-d.v[i+1];const xa=x0+w2,xb=x0+w;if(xb-xa>40){el('path',{d:`M${xa} ${y+rh+4} V${y+rh+gap-4} M${xb} ${y+rh+4} V${y+rh+gap-4} M${xa} ${y+rh+gap/2} H${xb}`,stroke:C.warn,'stroke-width':1.3,fill:'none'},ladSvg);el('text',{x:(xa+xb)/2,y:y+rh+gap/2-4,'text-anchor':'middle',fill:C.warn,'font-size':11},ladSvg,(i===0?'handling + encode + client: ':'paging + decode + transform: ')+(diff>=10?Math.round(diff)+' s':diff>=1?diff.toFixed(1)+' s':Math.round(diff*1000)+' ms'));}}});
+ el('text',{x:x0,y:30,fill:C.muted,'font-size':12.5},ladSvg,'one LIST of pods · each bar is drawn inside the one above it · the yellow braces are the differences');
+ el('text',{x:x0,y:284,fill:C.dim,'font-size':11.5},ladSvg,'Read from the top down. The outer bar is the only one the caller feels; the inner bars say where it went.');
+ document.getElementById('ladder-caption').textContent=d.caption;setRO('ro-lad-owner',d.owner[0],d.owner[1],d.owner[2]);setRO('ro-lad-verdict',d.verdict[0],d.verdict[1],d.verdict[2]);setRO('ro-lad-panel',d.panel[0],d.panel[1]);press('#ladder-controls','mode',k);}
+document.querySelectorAll('#ladder-controls button').forEach(b=>b.addEventListener('click',()=>drawLadder(b.dataset.mode)));drawLadder('healthy');
+
+/* ---------- 03 seats ---------- */
+const seatSvg=document.getElementById('seat-scene');
+const levels=[['exempt','EKS system components',null],['leader-election','controller leases',8],['workload-high','service accounts in kube-system',22],['workload-low','everything else',38],['catch-all','unclassified',4]];
+const seatModes={
+ steady:{rows:{'leader-election':[2,0,0,8],'workload-high':[9,0,0,22],'workload-low':[14,0,0,38],'catch-all':[1,0,0,4]},hot:['none','every level has headroom',C.ok],wait:['0 ms','nobody queued',C.ok],rej:['0','',C.ok],verdict:['headroom','rate can double before anyone waits',C.ok],caption:'A steady cluster on one instance. Each level uses a fraction of its seats; the effective limit (full row) sits above the floor (tick) because idle levels lend. Nothing queues, nothing is rejected.'},
+ burst:{rows:{'leader-election':[2,0,0,8],'workload-high':[9,0,0,22],'workload-low':[38,31,12,38],'catch-all':[1,0,0,4]},hot:['workload-low','seats at the limit, queue formed',C.fair],wait:['1.8 s','p90 on the tenant\'s flow',C.warn],rej:['12','queue-full',C.warn],verdict:['a tenant shaped by design','their rate exceeded their seats; fix on the client',C.warn],caption:'A tenant controller starts listing pods in a tight loop. Its level, workload-low, fills every seat; later arrivals queue and the overflow is rejected with 429 and a Retry-After. System levels are untouched: a tenant cannot starve them this way. The fix is client-side pacing.'},
+ expensive:{rows:{'leader-election':[2,0,0,8],'workload-high':[22,17,6,22],'workload-low':[11,0,0,38],'catch-all':[1,0,0,4]},hot:['workload-high','few requests, long held',C.fair],wait:['4.1 s','while rate is normal',C.bad],rej:['6','time-out',C.bad],verdict:['cost, not volume','something made each request slow; find it',C.bad],caption:'Request rate on workload-high did not change, but a webhook on pod writes now takes seconds, so each request holds its seat for seconds. Twenty-two slow requests fill the level; the rest queue. Seats are exhausted at a normal QPS. This is why "rate × cost" matters, and why a customer webhook can saturate a system level.'},
+ borrow:{rows:{'leader-election':[2,0,0,8],'workload-high':[4,0,0,22],'workload-low':[46,3,0,52],'catch-all':[1,0,0,4]},hot:['workload-low','running on borrowed seats',C.fair],wait:['120 ms','brief, draining',C.ok],rej:['0','',C.ok],verdict:['fine for now','and fragile: the lent seats go back when the lender gets busy',C.warn],caption:'workload-low is busy but healthy because workload-high is quiet and lending it seats: the effective limit (52) stands well above the floor (38). If workload-high gets busy, the limit collapses back to the floor and the queue appears without any change in workload-low\'s own traffic. Read the "effective limit vs floor" tiles with this in mind.'}};
+function drawSeats(k){const m=seatModes[k];clear(seatSvg);const x0=250,y0=40,rh=46,sw=9,sg=2;
+ el('text',{x:x0,y:24,fill:C.muted,'font-size':12.5},seatSvg,'one API server instance · each square is a seat · filled = executing · tick = guaranteed floor · circles = queued · ✗ = rejected');
+ levels.forEach((lv,i)=>{const y=y0+i*(rh+8);el('text',{x:x0-14,y:y+18,'text-anchor':'end',fill:lv[0]==='exempt'?C.grey:C.fair,'font-size':13.5,'font-weight':650},seatSvg,lv[0]);el('text',{x:x0-14,y:y+34,'text-anchor':'end',fill:C.dim,'font-size':10.5},seatSvg,lv[1]);
+  if(lv[2]==null){el('rect',{x:x0,y:y+6,width:300,height:26,rx:6,fill:'#141d28',stroke:C.grey,'stroke-dasharray':'4 3'},seatSvg);el('text',{x:x0+150,y:y+24,'text-anchor':'middle',fill:C.grey,'font-size':11.5},seatSvg,'exempt: no seat limit; cannot be starved by tenant traffic');return;}
+  const r=m.rows[lv[0]];const used=r[0],queued=r[1],rej=r[2],limit=r[3];const floor=lv[2];
+  for(let s=0;s<limit;s++){const x=x0+s*(sw+sg);el('rect',{x,y:y+6,width:sw,height:26,rx:2,fill:s<used?C.fair:'#1a2430',stroke:s<used?'none':'#2a3948'},seatSvg);}
+  const fx=x0+floor*(sw+sg)-sg/2;el('path',{d:`M${fx} ${y+2} V${y+36}`,stroke:C.warn,'stroke-width':2},seatSvg);el('text',{x:fx,y:y+46,'text-anchor':'middle',fill:C.warn,'font-size':9.5},seatSvg,'floor '+floor);
+  if(limit>floor){el('text',{x:x0+limit*(sw+sg)+6,y:y+24,fill:C.dim,'font-size':10.5},seatSvg,'limit '+limit+' (borrowed)');}
+  const qx=x0+52*(sw+sg)+24;for(let q=0;q<Math.min(queued,20);q++){el('circle',{cx:qx+q*7,cy:y+19,r:3,fill:C.warn,opacity:.9},seatSvg);}if(queued>0)el('text',{x:qx,y:y+44,fill:C.warn,'font-size':10.5},seatSvg,queued+' queued'+(rej>0?'  ·  ✗ '+rej+' rejected':''));});
+ el('text',{x:x0,y:318,fill:C.dim,'font-size':11.5},seatSvg,'Limits are per instance. Another instance can be idle while this one queues.');
+ document.getElementById('seat-caption').textContent=m.caption;setRO('ro-seat-level',m.hot[0],m.hot[1],m.hot[2]);setRO('ro-seat-wait',m.wait[0],m.wait[1],m.wait[2]);setRO('ro-seat-rej',m.rej[0],m.rej[1],m.rej[2]);setRO('ro-seat-verdict',m.verdict[0],m.verdict[1],m.verdict[2]);press('#seat-controls','mode',k);}
+document.querySelectorAll('#seat-controls button').forEach(b=>b.addEventListener('click',()=>drawSeats(b.dataset.mode)));drawSeats('steady');
+
+/* ---------- 04 watch cache ---------- */
+const cacheSvg=document.getElementById('cache-scene');
+const cacheModes={
+ steady:{recv:120,disp:50400,watchers:420,init:40,term:0,fb:2,fan:['×420','dispatched per event received',C.ok],initR:['low','40 objects/s replayed',C.ok],fbR:['few','2/s fell back to etcd',C.ok],verdict:['cache doing its job','one read serves hundreds of watchers',C.ok],hot:null,caption:'Steady state. Every change to a pod is read from etcd once (120 events/s) and delivered to each of 420 watchers (about 50,000 deliveries/s). Consistent reads are answered from the cache because it can prove it is current. Almost nothing reaches etcd.'},
+ storm:{recv:118,disp:49500,watchers:420,init:4200,term:35,fb:2,fan:['×420','unchanged',C.muted],initR:['4,200/s','a storm of replays',C.bad],fbR:['few','the cache is still fresh',C.ok],verdict:['reconnect storm','cost per watcher, not more change',C.bad],hot:'init',caption:'Watchers on pods are being closed (35/s terminated for falling behind, or a client restarted) and reconnecting. Each new watcher receives the whole collection as initial events before it sees live changes: 4,200 objects/s of replay. Received events did not change; the cost did. Order of evidence: close, reconnect, replay, then seats.'},
+ fallback:{recv:120,disp:50400,watchers:420,init:40,term:0,fb:160,fan:['×420','unchanged',C.muted],initR:['low','ordinary reconnects',C.ok],fbR:['160/s','consistent reads reaching etcd',C.bad],verdict:['cache cannot prove freshness','reads pay the full ladder',C.bad],hot:'fb',caption:'Clients ask for the latest state and the cache cannot prove it is current, so those reads fall through to etcd: 160 reads a second now pay the whole ladder from chapter 02. Etcd Request Latency and Storage LIST duration will rise with them. The cache is lagging the store, or clients are explicitly demanding uncached reads.'},
+ selector:{recv:120,disp:50400,watchers:420,init:40,term:0,fb:2,fan:['×420','unchanged',C.muted],initR:['low','',C.ok],fbR:['few','served from the cache',C.ok],verdict:['the cache is doing a lot of work for little answer','40 objects walked per object returned',C.warn],hot:'list',caption:'A controller lists pods with a label selector that matches one in forty. The cache answers it, so no fallback and no etcd time, but every call walks the whole collection to return a sliver. The LIST waste factor is 40 and the List Latency line for pods rises with nothing in the storage row to explain it.'}};
+function drawCache(k){const m=cacheModes[k];clear(cacheSvg);
+ el('rect',{x:40,y:110,width:170,height:90,rx:12,fill:'#2b1f12',stroke:C.storage,'stroke-width':2},cacheSvg);el('text',{x:125,y:148,'text-anchor':'middle',fill:C.storage,'font-size':16,'font-weight':650},cacheSvg,'etcd');el('text',{x:125,y:170,'text-anchor':'middle',fill:C.muted,'font-size':11.5},cacheSvg,'the store');
+ el('rect',{x:400,y:70,width:200,height:170,rx:12,fill:'#2b2615',stroke:C.apiserver,'stroke-width':2},cacheSvg);el('text',{x:500,y:100,'text-anchor':'middle',fill:C.apiserver,'font-size':16,'font-weight':650},cacheSvg,'watch cache');el('text',{x:500,y:120,'text-anchor':'middle',fill:C.muted,'font-size':11.5},cacheSvg,'one copy of every object');
+ for(let i=0;i<6;i++)for(let j=0;j<8;j++)el('rect',{x:422+j*20,y:140+i*14,width:16,height:10,rx:2,fill:C.apiserver,opacity:.25+(((i*8+j)%5)/12)},cacheSvg);
+ el('path',{d:'M210 150 H398',stroke:C.storage,'stroke-width':3,'marker-end':'url(#arr)',fill:'none'},cacheSvg);el('text',{x:304,y:138,'text-anchor':'middle',fill:C.storage,'font-size':12.5,'font-weight':600},cacheSvg,m.recv+' events/s received');
+ const fbCol=m.hot==='fb'?C.bad:C.dim;el('path',{d:'M398 185 H212',stroke:fbCol,'stroke-width':m.hot==='fb'?3:1.5,'stroke-dasharray':'5 4','marker-end':'url(#arr)',fill:'none'},cacheSvg);el('text',{x:304,y:204,'text-anchor':'middle',fill:fbCol,'font-size':12,'font-weight':m.hot==='fb'?700:400},cacheSvg,m.fb+' reads/s fell back to etcd');
+ const wx=780;for(let i=0;i<14;i++){const y=40+i*17;el('rect',{x:wx,y,width:180,height:12,rx:3,fill:'#13213a',stroke:C.client,'stroke-width':1},cacheSvg);if(i===13){el('text',{x:wx+90,y:y+10,'text-anchor':'middle',fill:C.client,'font-size':9.5},cacheSvg,'… '+m.watchers+' watchers');}}
+ for(let i=0;i<6;i++){el('path',{d:`M600 ${120+i*22} Q 690 ${120+i*22} ${wx-2} ${48+i*40}`,stroke:C.apiserver,'stroke-width':1.5,fill:'none',opacity:.7},cacheSvg);}
+ el('text',{x:690,y:28,'text-anchor':'middle',fill:C.apiserver,'font-size':12.5,'font-weight':600},cacheSvg,m.disp.toLocaleString()+' deliveries/s dispatched');
+ const initCol=m.hot==='init'?C.bad:C.dim;el('path',{d:`M600 232 Q 690 262 ${wx-4} 250`,stroke:initCol,'stroke-width':m.hot==='init'?3:1.5,'stroke-dasharray':'6 4','marker-end':'url(#arr)',fill:'none'},cacheSvg);el('text',{x:690,y:282,'text-anchor':'middle',fill:initCol,'font-size':12,'font-weight':m.hot==='init'?700:400},cacheSvg,m.init.toLocaleString()+' init events/s replayed');el('text',{x:690,y:297,'text-anchor':'middle',fill:initCol,'font-size':11},cacheSvg,'to watchers that just (re)connected');
+ if(m.term>0){el('text',{x:wx+90,y:300,'text-anchor':'middle',fill:C.bad,'font-size':12,'font-weight':600},cacheSvg,'✗ '+m.term+' watchers/s terminated');}
+ if(m.hot==='list'){el('rect',{x:412,y:132,width:176,height:96,rx:6,fill:'none',stroke:C.warn,'stroke-width':2,'stroke-dasharray':'5 4'},cacheSvg);el('text',{x:500,y:258,'text-anchor':'middle',fill:C.warn,'font-size':12,'font-weight':600},cacheSvg,'LIST with selector: walks all, returns 1 in 40');}
+ el('text',{x:40,y:300,fill:C.dim,'font-size':11.5},cacheSvg,'orange = storage · amber = the API server\'s own cache · blue = watchers (controllers, kubelets)');
+ document.getElementById('cache-caption').textContent=m.caption;setRO('ro-cache-fan',m.fan[0],m.fan[1],m.fan[2]);setRO('ro-cache-init',m.initR[0],m.initR[1],m.initR[2]);setRO('ro-cache-fb',m.fbR[0],m.fbR[1],m.fbR[2]);setRO('ro-cache-verdict',m.verdict[0],m.verdict[1],m.verdict[2]);press('#cache-controls','mode',k);}
+document.querySelectorAll('#cache-controls button').forEach(b=>b.addEventListener('click',()=>drawCache(b.dataset.mode)));drawCache('steady');
+
+/* ---------- 05 storage ---------- */
+const storeSvg=document.getElementById('store-scene');
+const storeModes={
+ quiet:{objs:[['pods',41,C.client],['events',9,C.muted],['secrets',6,C.storage],['configmaps',5,C.muted],['leases',2,C.dim]],size:1.8,writes:[['leases',180],['pods',60],['events',40],['secrets',2]],err:0,hot:null,ro:[['1.8 GiB','slow, explainable growth',C.ok],['pods','as expected',C.ok],['0','per second',C.ok],['nowhere needed','',C.ok]],caption:'A quiet cluster. Pods are the largest collection, writes are dominated by lease renewals (one per node every few seconds), and nothing fails. The DB size grows slowly and plateaus.'},
+ secrets:{objs:[['pods',41,C.client],['events',9,C.muted],['secrets',6,C.storage],['configmaps',5,C.muted],['leases',2,C.dim]],size:2.4,writes:[['secrets',640],['leases',180],['pods',60],['events',40]],err:0,hot:'secrets',ro:[['2.4 GiB','growing with history',C.warn],['pods','unchanged',C.ok],['0','per second',C.ok],['the rotation tool','slow it down or scope it',C.warn]],caption:'A secret-rotation tool rewrites hundreds of Secrets a second. The object count barely moves, but every write is a new version in the store and, with envelope encryption, a KMS call each. Etcd Request Latency on update steps up, the Secret Cache tile churns, and the audit log\'s "top callers mutating secrets" query names the tool.'},
+ leases:{objs:[['pods',41,C.client],['events',9,C.muted],['secrets',6,C.storage],['configmaps',5,C.muted],['leases',4,C.dim]],size:1.9,writes:[['leases',1900],['pods',60],['events',40],['secrets',2]],err:3,hot:'leases',ro:[['1.9 GiB','steady',C.ok],['pods','unchanged',C.ok],['3','create leases failing',C.bad],['node count and renew interval','more nodes, same interval',C.warn]],caption:'Thousands of nodes and controllers each renew a lease every few seconds, and a lease-heavy add-on multiplies it. The store sees nearly two thousand small writes a second. Writes are what the store serialises, so every other write queues behind them. A few lease creates begin to fail: the error panel, not the fairness panel, is where that shows.'},
+ growth:{objs:[['events',52,C.bad],['pods',41,C.client],['secrets',6,C.storage],['configmaps',5,C.muted],['leases',2,C.dim]],size:4.6,writes:[['events',900],['leases',180],['pods',60],['secrets',2]],err:0,hot:'events',ro:[['4.6 GiB','accelerating',C.bad],['events','overtook pods',C.bad],['0','per second',C.ok],['the emitter, and the TTL','stop the flood; let old ones expire',C.bad]],caption:'Something emits Events faster than they expire. The collection overtakes pods, the DB grows without a plateau, and three other panels follow: List Latency for events, Response sizes for events, and API Pod Memory, because the cache holds every one. Fix the emitter; the store cannot be made bigger from here.'}};
+function drawStore(k){const m=storeModes[k];clear(storeSvg);
+ el('text',{x:40,y:26,fill:C.muted,'font-size':12.5},storeSvg,'stored objects by resource (thousands)');const maxO=60;m.objs.forEach((o,i)=>{const y=44+i*40;const w=380*o[1]/maxO;const hot=m.hot===o[0];el('text',{x:40,y:y+18,fill:hot?C.bad:C.muted,'font-size':12.5,'font-weight':hot?650:400},storeSvg,o[0]);el('rect',{x:140,y,width:380,height:26,rx:5,fill:'#1a2430'},storeSvg);el('rect',{x:140,y,width:w,height:26,rx:5,fill:hot?C.bad:o[2],opacity:.85},storeSvg);el('text',{x:140+w+8,y:y+18,fill:C.ink,'font-size':12.5,'font-weight':600},storeSvg,o[1]+'k');});
+ el('text',{x:580,y:26,fill:C.muted,'font-size':12.5},storeSvg,'writes per second, by resource');const maxW=2000;m.writes.forEach((o,i)=>{const y=44+i*40;const w=Math.max(4,300*o[1]/maxW);const hot=m.hot===o[0];el('text',{x:580,y:y+18,fill:hot?C.bad:C.muted,'font-size':12.5,'font-weight':hot?650:400},storeSvg,o[0]);el('rect',{x:660,y,width:300,height:26,rx:5,fill:'#1a2430'},storeSvg);el('rect',{x:660,y,width:w,height:26,rx:5,fill:hot?C.bad:C.storage,opacity:.85},storeSvg);el('text',{x:660+Math.min(w,240)+8,y:y+18,fill:C.ink,'font-size':12.5,'font-weight':600},storeSvg,o[1]+'/s');});
+ const gx=600,gy=250;el('text',{x:580,y:232,fill:C.muted,'font-size':12.5},storeSvg,'DB size');el('rect',{x:580,y:gy,width:380,height:20,rx:6,fill:'#1a2430'},storeSvg);el('rect',{x:580,y:gy,width:380*Math.min(1,m.size/6),height:20,rx:6,fill:m.size>4?C.bad:m.size>2?C.warn:C.storage},storeSvg);el('text',{x:580+380*Math.min(1,m.size/6)+8,y:gy+15,fill:C.ink,'font-size':13,'font-weight':600},storeSvg,m.size+' GiB');
+ el('text',{x:580,y:300,fill:m.err>0?C.bad:C.dim,'font-size':12.5,'font-weight':m.err>0?650:400},storeSvg,m.err>0?'✗ '+m.err+' storage errors/s':'storage errors: none');
+ el('text',{x:40,y:262,fill:C.dim,'font-size':11.5},storeSvg,'The store is managed. Nothing on this row is a knob;');el('text',{x:40,y:280,fill:C.dim,'font-size':11.5},storeSvg,'every bar is a client behaviour you can change.');
+ document.getElementById('store-caption').textContent=m.caption;setRO('ro-st-size',m.ro[0][0],m.ro[0][1],m.ro[0][2]);setRO('ro-st-big',m.ro[1][0],m.ro[1][1],m.ro[1][2]);setRO('ro-st-err',m.ro[2][0],m.ro[2][1],m.ro[2][2]);setRO('ro-st-fix',m.ro[3][0],m.ro[3][1],m.ro[3][2]);press('#store-controls','mode',k);}
+document.querySelectorAll('#store-controls button').forEach(b=>b.addEventListener('click',()=>drawStore(b.dataset.mode)));drawStore('quiet');
+
+/* ---------- 06 front door ---------- */
+const frontSvg=document.getElementById('front-scene');
+const frontChain=[['TLS','handshake',C.client],['authn','who?',C.apiserver],['authz','allowed?',C.apiserver],['filters','audit, fairness',C.fair],['mutating','webhooks',C.webhook],['validating','webhooks',C.webhook],['storage','write',C.storage]];
+const frontModes={
+ healthy:{fail:-1,slow:-1,codes:[['2xx',96,C.ok],['401',1,C.muted],['403',2,C.muted],['429',1,C.muted],['504',0,C.muted]],ro:[['ok','failures quiet',C.ok],['40 ms','flat',C.ok],['2xx','a few 401/403 are normal',C.ok],['≈ 0','the two clocks agree',C.ok]],caption:'Healthy. Identity checks take milliseconds, the four webhooks answer in tens of milliseconds, and the response codes are almost all 2xx with the usual trickle of 401s and 403s from misconfigured or over-reaching clients.'},
+ tokens:{fail:1,slow:-1,codes:[['2xx',70,C.ok],['401',28,C.bad],['403',2,C.muted],['429',0,C.muted],['504',0,C.muted]],ro:[['failures up','credentials rejected, not the authenticator',C.bad],['40 ms','untouched',C.ok],['401','with an empty user',C.bad],['≈ 0','these requests never got past identity',C.ok]],caption:'A rotated service-account token or an expired kubeconfig: a flood of 401s. Authentication attempts by result shows failure, not error, so the authenticator is fine and the credentials are wrong. Every 401 carries a source address and user agent in the audit log, so the caller is attributable even though it was never identified. Nothing downstream is affected.'},
+ slowhook:{fail:-1,slow:4,codes:[['2xx',88,C.ok],['401',1,C.muted],['403',2,C.muted],['429',0,C.muted],['504',9,C.bad]],ro:[['ok','',C.ok],['10.0 s','pinned at the timeout',C.bad],['504 on writes','context deadline exceeded',C.bad],['≈ 10 s','on PATCH and CREATE only',C.bad]],caption:'A mutating webhook stops answering in time. Every write it is registered for waits the full configured timeout, then fails with 504. On the dashboard: Admission Webhook Admission Duration pinned flat at a round number; Non List Latency for PATCH pulls away from its SLI twin; total − SLI opens by exactly the timeout. Reads are untouched.'},
+ failclosed:{fail:5,slow:-1,codes:[['2xx',60,C.ok],['401',1,C.muted],['403',2,C.muted],['429',0,C.muted],['500',37,C.bad]],ro:[['ok','',C.ok],['n/a','the webhook is unreachable',C.bad],['500 on CREATE','"failed calling webhook"',C.bad],['small','the call fails fast',C.warn]],caption:'A validating webhook with failurePolicy: Fail is down. The API server cannot reach it, so it refuses every CREATE the webhook covers. Pods never reach Pending; a deployment with zero Pending pods and zero new pods is the tell. API server outbound client errors shows the failed calls to the webhook service; the fix is the webhook\'s deployment, not the control plane.'}};
+function drawFront(k){const m=frontModes[k];clear(frontSvg);const x0=30,bw=118,gap=18,y=60,h=70;
+ frontChain.forEach((c,i)=>{const x=x0+i*(bw+gap);const isFail=i===m.fail,isSlow=i===m.slow;const col=isFail?C.bad:isSlow?C.warn:c[2];el('rect',{x,y,width:bw,height:h,rx:10,fill:isFail?'#2a1a1e':isSlow?'#2b2615':'#17222e',stroke:col,'stroke-width':isFail||isSlow?2.6:1.4},frontSvg);el('text',{x:x+bw/2,y:y+30,'text-anchor':'middle',fill:col,'font-size':14.5,'font-weight':650},frontSvg,c[0]);el('text',{x:x+bw/2,y:y+50,'text-anchor':'middle',fill:C.muted,'font-size':11.5},frontSvg,c[1]);if(i<frontChain.length-1)el('path',{d:`M${x+bw+2} ${y+h/2} H${x+bw+gap-4}`,stroke:C.muted,'stroke-width':2,'marker-end':'url(#arr)',fill:'none'},frontSvg);if(isFail)el('text',{x:x+bw/2,y:y+h+22,'text-anchor':'middle',fill:C.bad,'font-size':12.5,'font-weight':600},frontSvg,'refuses here');if(isSlow)el('text',{x:x+bw/2,y:y+h+22,'text-anchor':'middle',fill:C.warn,'font-size':12.5,'font-weight':600},frontSvg,'waits 10 s here');});
+ el('text',{x:x0,y:40,fill:C.muted,'font-size':12.5},frontSvg,'one write request · the stages before storage · the webhooks are services you installed');
+ el('rect',{x:x0+4*(bw+gap)-6,y:y-8,width:2*bw+gap+12,height:h+16,rx:12,fill:'none',stroke:C.webhook,'stroke-dasharray':'5 4',opacity:.6},frontSvg);el('text',{x:x0+4*(bw+gap)+bw+gap/2,y:y-14,'text-anchor':'middle',fill:C.webhook,'font-size':11},frontSvg,'excluded from the SLI');
+ el('text',{x:x0,y:190,fill:C.muted,'font-size':12.5},frontSvg,'what clients get back (share of responses)');
+ m.codes.forEach((c,i)=>{const bx=x0+i*190;const w=Math.max(4,170*c[1]/100);el('text',{x:bx,y:216,fill:c[2],'font-size':13,'font-weight':650},frontSvg,c[0]);el('rect',{x:bx+40,y:204,width:130,height:16,rx:4,fill:'#1a2430'},frontSvg);el('rect',{x:bx+40,y:204,width:130*c[1]/100,height:16,rx:4,fill:c[2],opacity:.9},frontSvg);el('text',{x:bx+40,y:240,fill:C.dim,'font-size':11},frontSvg,c[1]+'%');});
+ el('text',{x:x0,y:282,fill:C.dim,'font-size':11.5},frontSvg,'401 = arrived, not identified · 403 = identified, not allowed · 429 = fairness · 504 = a webhook or handler timed out · 500 "failed calling webhook" = fail-closed');
+ document.getElementById('front-caption').textContent=m.caption;setRO('ro-fr-auth',m.ro[0][0],m.ro[0][1],m.ro[0][2]);setRO('ro-fr-hook',m.ro[1][0],m.ro[1][1],m.ro[1][2]);setRO('ro-fr-code',m.ro[2][0],m.ro[2][1],m.ro[2][2]);setRO('ro-fr-gap',m.ro[3][0],m.ro[3][1],m.ro[3][2]);press('#front-controls','mode',k);}
+document.querySelectorAll('#front-controls button').forEach(b=>b.addEventListener('click',()=>drawFront(b.dataset.mode)));drawFront('healthy');
+
+/* ---------- 07 process ---------- */
+const procSvg=document.getElementById('proc-scene');
+const procModes={
+ quiet:{inst:[[62,38,44,30,0],[64,40,45,29,0],[63,37,44,31,0]],ro:[['aligned','plateaus move together',C.ok],['stable band','instances track one another',C.ok],['0','nothing abandoned',C.ok],['healthy','',C.ok]],caption:'Three instances behind one endpoint. Memory, CPU, threads and in-flight requests are three similar numbers each. This is the shape to remember; everything below is a departure from it.'},
+ liststorm:{inst:[[62,38,44,30,0],[93,86,48,78,0],[63,37,44,31,0]],ro:[['one diverges','ip-10-0-2-45 at 93%',C.bad],['one diverges','a client\'s connections landed there',C.bad],['0','still answering, slowly',C.ok],['a pinned heavy client','find it in the audit log by instance',C.bad]],caption:'A client with long-lived connections lists pods in a loop, and all its connections terminate on one instance. That instance\'s memory and CPU climb with the responses it is building, its in-flight count separates, and the others stay flat. Rate per instance would look only slightly uneven; cost per request is what moved.'},
+ blocked:{inst:[[66,22,88,70,0],[67,21,90,72,0],[65,23,87,69,0]],ro:[['aligned','slightly up',C.ok],['high, together','requests parked, not working',C.warn],['0','',C.ok],['a slow dependency','threads ratchet while CPU falls',C.warn]],caption:'A webhook or the store has become slow. Requests pile up in flight on every instance, threads ratchet upward as calls park, and CPU falls because nothing is being computed. All three move together, so this is not an instance problem; it is whatever every instance is waiting on.'},
+ shed:{inst:[[88,92,70,100,14],[89,91,72,100,12],[87,93,71,100,15]],ro:[['high, together','near the same ceiling',C.warn],['at the ceiling','all lines flat at the top',C.bad],['14/s','requests abandoned',C.bad],['capacity exhausted','the fairness row will show the queues',C.bad]],caption:'Every instance is flat against its concurrency ceiling and abandoning requests it cannot serve. Terminations are the page. The fairness row will show which levels are queueing and which flows hold the seats; the latency row will show whether the per-request cost rose first.'}};
+function drawProc(k){const m=procModes[k];clear(procSvg);const names=['ip-10-0-1-21','ip-10-0-2-45','ip-10-0-3-12'];const labels=['memory','CPU','threads','in flight'];
+ m.inst.forEach((inst,i)=>{const x=30+i*320;el('rect',{x,y:30,width:296,height:250,rx:12,fill:'#17222e',stroke:C.line},procSvg);el('text',{x:x+16,y:56,fill:C.ink,'font-size':14,'font-weight':650},procSvg,names[i]);el('text',{x:x+16,y:74,fill:C.dim,'font-size':11},procSvg,'API server instance');
+  labels.forEach((l,j)=>{const y=96+j*38;const v=inst[j];const med=[...m.inst.map(o=>o[j])].sort((a,b)=>a-b)[1];const diverge=Math.abs(v-med)>20;const col=v>=98?C.bad:diverge?C.bad:v>80?C.warn:C.apiserver;el('text',{x:x+16,y:y+14,fill:C.muted,'font-size':12},procSvg,l);el('rect',{x:x+90,y,width:190,height:18,rx:4,fill:'#1a2430'},procSvg);el('rect',{x:x+90,y,width:190*v/100,height:18,rx:4,fill:col,opacity:.9},procSvg);el('text',{x:x+90+190*v/100-4,y:y+13,'text-anchor':'end',fill:'#0b1117','font-size':10.5,'font-weight':700},procSvg,v>14?v+'%':'');});
+  const t=inst[4];el('rect',{x:x+16,y:246,width:264,height:22,rx:6,fill:t>0?C.bad:'#1a2430'},procSvg);el('text',{x:x+148,y:262,'text-anchor':'middle',fill:t>0?'#0b1117':C.dim,'font-size':12,'font-weight':600},procSvg,t>0?'✗ '+t+' terminations/s':'terminations: 0');});
+ el('text',{x:30,y:306,fill:C.dim,'font-size':11.5},procSvg,'bars are illustrative shares of each instance\'s usual range · red = far from its peers or at a ceiling');
+ document.getElementById('proc-caption').textContent=m.caption;setRO('ro-pr-mem',m.ro[0][0],m.ro[0][1],m.ro[0][2]);setRO('ro-pr-inf',m.ro[1][0],m.ro[1][1],m.ro[1][2]);setRO('ro-pr-term',m.ro[2][0],m.ro[2][1],m.ro[2][2]);setRO('ro-pr-verdict',m.ro[3][0],m.ro[3][1],m.ro[3][2]);press('#proc-controls','mode',k);}
+document.querySelectorAll('#proc-controls button').forEach(b=>b.addEventListener('click',()=>drawProc(b.dataset.mode)));drawProc('quiet');
+
+/* ---------- 08 dashboard map ---------- */
+const mapSvg=document.getElementById('dash-map');
+const statsDef=[['s_term','Terminations'],['s_mem','Memory'],['s_dek','Secret cache'],['s_agg','Unavail. APIService']];
+const latDef=[['l_list','List Latency'],['l_non','Non List Latency'],['l_etcd','Etcd Request Latency'],['l_slow','Slowest Requests'],['l_inf','Total inflight'],['l_out','Outbound client errors'],['l_cpu','CPU seconds'],['l_hook','Webhook duration'],['l_tot','request total']];
+const fairDef=[['f_lim','Limit vs floor'],['f_q','Inqueue'],['f_util','Utilisation'],['f_exec','Executing by flow'],['f_wait','Queue wait p90'],['f_rej','Rejected'],['f_exect','Execution p90'],['f_add','Arrival rate']];
+const wcDef=[['w_fb','Cache vs fallback'],['w_term','Terminated watchers'],['w_init','Init events'],['w_act','Active watches'],['w_fan','Received vs dispatched'],['w_waste','LIST waste factor']];
+const stDef=[['st_size','DB size'],['st_obj','Stored objects'],['st_err','etcd client errors'],['st_list','Storage LIST p99'],['st_resp','Response sizes']];
+const adDef=[['a_authn','Authn by result'],['a_dur','AuthN/AuthZ p99'],['a_tls','TLS + aborts'],['a_filt','Filter duration'],['a_sli','SLI vs total']];
+const cases={
+ webhook:{stats:{},lat:['l_non','l_hook','l_slow'],fair:[],wc:[],st:[],ad:['a_sli'],walk:[['Two clocks','Total and SLI split on writes only; total − SLI is close to a round 10 s.'],['Which request class','Non List Latency: PATCH and CREATE on pods pull away from their SLI twins. Reads untouched.'],['Which owner','Fairness queue wait is flat, so not seats. Admission Webhook Admission Duration: one name pinned at 10 s.'],['Who asked','Not needed: the owner is the webhook, not a caller. Its service and namespace are in the name.'],['Leave with','"Writes to pods waited 10 s on policy-validator from 14:02; the webhook is timing out. Fix or fail-open the webhook."']],caption:'A webhook stops answering in time. The dashboard shape: the two clocks split, only mutating verbs are slow, the fairness row is quiet, and the webhook panel names it. Nothing on the storage or cache rows moves.'},
+ fair:{stats:{},lat:['l_tot','l_inf'],fair:['f_q','f_util','f_wait','f_rej','f_exec'],wc:[],st:[],ad:['a_filt','a_sli'],walk:[['Two clocks','Total and SLI split; the gap is seconds and uneven.'],['Which request class','apiserver request total: a stream of 429s on LIST pods from one class; Total inflight on one instance diverges.'],['Which owner','Requests inqueue and utilisation near 1.0 on workload-low; queue wait p90 in seconds; Rejected Requests with reason queue-full; one flow dominates Top executing requests.'],['Who asked','The flow schema names the tenant\'s service account. The audit log confirms the user agent and its loop.'],['Leave with','"Tenant X\'s controller exceeded its workload-low seats on one instance from 09:10; shaped by design. Pace the client; no control-plane fault."']],caption:'A tenant\'s own traffic being paced. System levels are untouched, so this is working as designed. The dashboard tells you so: queue, utilisation and rejections all on one tenant level, with the storage and cache rows quiet.'},
+ watch:{stats:{s_mem:'warn'},lat:['l_inf','l_cpu'],fair:['f_exec','f_util'],wc:['w_term','w_init','w_act'],st:[],ad:[],walk:[['Two clocks','Both clocks rise a little together; this is not a queue or webhook story.'],['Which request class','Total inflight and CPU step up on two instances; memory follows.'],['Which owner','Watch cache row: Terminated watchers on pods, then a burst of init events, then Active watches climbing. Close, reconnect, replay.'],['Who asked','Audit log: which user agents opened the new watches, and from how many source addresses (reconnects vs new clients).'],['Leave with','"A fleet of agents reconnected their pod watches at 11:40 and replayed the whole collection; seats filled on two instances. Stagger the agents\' restarts."']],caption:'Watchers close and reconnect en masse. The cost is replay, not change: received events stay flat while init events spike. The fairness row shows seats filling as a consequence, not a cause; the timestamps on the watch-cache row settle the order.'},
+ selector:{stats:{s_mem:'warn'},lat:['l_list','l_slow','l_cpu'],fair:[],wc:['w_waste'],st:['st_list'],ad:[],walk:[['Two clocks','Total and SLI move together: the server itself is doing the work.'],['Which request class','List Latency: pods alone rises, SLI twin with it. Slowest Requests pins LIST pods at the top.'],['Which owner','LIST waste factor climbs to 40. Storage LIST p99 for pods is flat and Etcd Request Latency is flat: the cache answers it, and the walk is the cost.'],['Who asked','Audit log: top clients listing pods, with the selector in the request URI. One controller, every 10 s, no limit parameter.'],['Leave with','"One controller lists pods with a selector matching 1 in 40, every 10 s, since 14:02; 40 objects walked per returned. Switch it to a watch or a field index."']],caption:'Successful, slow, and invisible to every failure counter. The LIST ladder is top-heavy with nothing in storage; the waste factor names the mechanism; the audit log names the caller. Diagnose against the cluster\'s own baseline, not the 30 s SLO.'},
+ store:{stats:{},lat:['l_list','l_non','l_etcd'],fair:[],wc:['w_fb'],st:['st_size','st_list','st_err'],ad:[],walk:[['Two clocks','Total and SLI rise together, on every verb and resource at once.'],['Which request class','Everything. Non List Latency shows broad growth; Etcd Request Latency has a shared step across list, create, update and get.'],['Which owner','Storage row: Storage LIST p99 up for every resource, DB size accelerating, a few etcd client errors. Cache fallback rises because the cache lags the store.'],['Who asked','Audit log: top mutating operations. A single user agent behind most writes is the usual finding.'],['Leave with','"Storage latency stepped up on all operations at 16:20 while a rotation tool wrote 600 Secrets/s; storage errors followed. Throttle the writer; escalate with the etcd latency panel if it persists after."']],caption:'The store itself is slow, and the sign is breadth: every operation, every resource, both clocks. Reduce the write pressure you can see on the storage row first; if latency stays high with writes quiet, that is the escalation case.'},
+ fine:{stats:{},lat:['l_tot'],fair:[],wc:[],st:[],ad:[],walk:[['Two clocks','Together, and inside each resource\'s own usual band.'],['Which request class','apiserver request total has changing leaders; Slowest Requests changes membership minute to minute.'],['Which owner','Nothing to open. Fairness tiles show headroom; the cache row is flat; storage errors empty; webhooks in tens of milliseconds.'],['Who asked','No one to find.'],['Leave with','Nothing. High request rate and high CPU were never the question.']],caption:'A busy, healthy cluster. Request rate and CPU are high because the cluster is large, and nothing on the dashboard is a departure from its own shape. The dashboard\'s job here is to let you walk away.'}};
+function drawMap(k){const c=cases[k];clear(mapSvg);
+ const box=(x,y,w,h,label,state,small)=>{const col=state==='bad'?C.bad:state==='warn'?C.warn:state==='on'?C.apiserver:null;el('rect',{x,y,width:w,height:h,rx:6,fill:col?(state==='on'?'#2b2615':col):'#17222e',stroke:col||C.line,'stroke-width':col?2:1,opacity:col?1:.55},mapSvg);const maxc=Math.max(6,Math.floor(w/(small?5.2:5.8)));const words=label.split(' ');let lines=[],line='';words.forEach(wd=>{if((line+' '+wd).length>maxc){lines.push(line);line=wd;}else line=line?line+' '+wd:wd;});lines.push(line);lines.forEach((l,i)=>el('text',{x:x+w/2,y:y+h/2+4+(i-(lines.length-1)/2)*12,'text-anchor':'middle',fill:col&&state!=='on'?'#0b1117':col?C.apiserver:C.muted,'font-size':small?9:10.5,'font-weight':col?600:400},mapSvg,l));};
+ const sec=(y,title,on)=>el('text',{x:16,y,fill:on?C.apiserver:C.dim,'font-size':12,'font-weight':600},mapSvg,title);
+ sec(22,'Top · the process and two clocks',Object.keys(c.stats).length>0||c.lat.length>0);
+ statsDef.forEach(([id,l],i)=>box(16+i*154,30,148,34,l,c.stats[id]||null,true));
+ latDef.forEach(([id,l],i)=>box(16+(i%3)*203,72+Math.floor(i/3)*40,197,34,l,c.lat.includes(id)?'on':null));
+ sec(206,'Advanced Priority and Fairness',c.fair.length>0);
+ fairDef.forEach(([id,l],i)=>box(16+(i%4)*152,214+Math.floor(i/4)*38,146,32,l,c.fair.includes(id)?'on':null));
+ sec(306,'Watch Cache & Staleness',c.wc.length>0);
+ wcDef.forEach(([id,l],i)=>box(16+(i%3)*203,314+Math.floor(i/3)*38,197,32,l,c.wc.includes(id)?'on':null));
+ sec(406,'Storage, the client view',c.st.length>0);
+ stDef.forEach(([id,l],i)=>box(16+i*122,414,116,32,l,c.st.includes(id)?'on':null));
+ sec(476,'Admission & AuthN/Z',c.ad.length>0);
+ adDef.forEach(([id,l],i)=>box(16+i*122,484,116,32,l,c.ad.includes(id)?'on':null));
+ el('text',{x:16,y:546,fill:C.dim,'font-size':10.5},mapSvg,'amber = the panels that carry this case · the rows are the dashboard\'s own order');
+ c.walk.forEach((w,i)=>{document.getElementById('w'+(i+1)+'t').textContent=w[0];document.getElementById('w'+(i+1)+'s').textContent=w[1];});
+ document.querySelectorAll('#walk-steps > div').forEach(d=>d.classList.toggle('on',true));
+ document.getElementById('case-caption').textContent=c.caption;press('#case-controls','case',k);}
+document.querySelectorAll('#case-controls button').forEach(b=>b.addEventListener('click',()=>drawMap(b.dataset.case)));drawMap('webhook');
+
+/* ---------- rail ---------- */
+const links=[...document.querySelectorAll('#stack a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(s=>io.observe(s));
+})();
+</script>
+</body></html>

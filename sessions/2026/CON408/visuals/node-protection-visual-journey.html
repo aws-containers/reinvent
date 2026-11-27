@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="author" content="Shane Corbett, Kubernetes Specialist"><meta name="contact" content="shancor@amazon.com"><meta name="description" content="A layer-by-layer visual journey through what a Kubernetes node does for its pods, and how the node-protection dashboard watches each layer."><title>Can the node still run its pods? · A visual journey · Shane Corbett</title>
+<style>
+:root{--bg:#0d141c;--bg2:#121c26;--card:#17222e;--card2:#1d2a38;--line:#2a3948;--ink:#e8eef4;--muted:#9fb0c0;--dim:#6f8396;
+--pods:#5B9BF8;--kubelet:#F5B83D;--containerd:#E07B24;--agents:#A78BFA;--ok:#3FB950;--warn:#FADE2A;--bad:#F2495C;--info:#8AB8FF;--grey:#5B6B85;--expected:#6C7A93;--orange:#FF9830;--nodata:#6E7681;
+--sans:"Inter","SF Pro Text",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--info);text-underline-offset:3px}a:hover{color:#fff}
+button{font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--info);outline-offset:4px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(40px,5.2vw,66px);line-height:1.02;letter-spacing:-.03em;font-weight:700;margin-bottom:18px}
+h1 em{font-style:normal;color:var(--kubelet)}
+h2{font-size:clamp(28px,3.1vw,40px);line-height:1.12;letter-spacing:-.025em;font-weight:700;margin-bottom:12px}
+h3{font-size:18px;font-weight:650;margin-bottom:6px}
+code{font-family:var(--mono);font-size:.88em;background:#0a1016;padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--info);color:#000;padding:8px 12px;border-radius:6px}.skip:focus{left:8px;z-index:50}
+
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;padding:26px 20px;border-right:1px solid var(--line);background:var(--bg2);display:flex;flex-direction:column;gap:18px;overflow:auto}
+.rail-title{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.rail-title strong{display:block;font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+.stack{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.stack a{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:center;text-decoration:none;color:var(--muted);padding:9px 10px;border-radius:9px;border:1px solid transparent;background:var(--card);transition:all .25s}
+.stack a span.num{font-family:var(--mono);font-size:12px;color:var(--dim)}
+.stack a b{display:block;font-weight:600;font-size:14px;color:var(--ink)}
+.stack a small{display:block;font-size:12px;color:var(--dim)}
+.stack a::before{content:"";position:absolute}
+.stack li{position:relative}
+.stack li::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--c,var(--line));opacity:.5}
+.stack a.active{border-color:var(--c,var(--info));background:var(--card2);transform:translateX(4px)}
+.stack a.active b{color:var(--c,var(--ink))}
+.rail-legend{margin-top:auto;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.rail-legend div{display:flex;gap:8px;align-items:center;margin:4px 0}
+.rail-legend i{width:12px;height:12px;border-radius:3px;background:var(--c);display:inline-block;flex:none}
+.rail-by{font-size:12px;color:var(--dim);line-height:1.45}.rail-by b{color:var(--muted)}
+
+main{min-width:0}
+.hero{padding:76px 64px 54px;background:radial-gradient(1200px 500px at 20% -10%,#1b3350 0%,transparent 60%),radial-gradient(800px 400px at 95% 10%,#3a2a12 0%,transparent 55%),var(--bg)}
+.kicker{display:inline-block;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--kubelet);font-weight:650;margin-bottom:16px}
+.lede{font-size:21px;line-height:1.5;color:var(--muted);max-width:760px;margin-bottom:18px}
+.byline{display:inline-flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);padding:10px 16px;border-radius:999px;font-size:14.5px;color:var(--muted);margin:10px 0 36px}
+.byline b{color:var(--ink)}.byline .dot{width:8px;height:8px;border-radius:50%;background:var(--kubelet)}
+.howto{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1000px}
+.howto div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.howto b{display:block;font-size:14px;margin-bottom:4px}.howto p{margin:0;font-size:14px;color:var(--muted)}
+.howto .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:6px;margin-bottom:8px;color:#000;background:var(--c)}
+
+.chapter{padding:84px 64px 24px;max-width:1180px}
+.chapter-head{max-width:820px;margin-bottom:28px}
+.intro{font-size:18.5px;color:var(--muted);margin:0}
+.lesson{margin:34px 0 0;padding:22px 26px;border-left:4px solid var(--kubelet);background:linear-gradient(90deg,#1c2432,transparent);border-radius:0 14px 14px 0;font-size:20px;line-height:1.45;font-weight:600;max-width:900px}
+.lesson small{display:block;font-weight:400;font-size:14.5px;color:var(--muted);margin-top:6px}
+
+.scene{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px 18px;margin:0 0 14px}
+.scene .label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.scene svg{width:100%;height:auto;display:block}
+.caption{font-size:14.5px;color:var(--muted);margin:10px 2px 0;max-width:900px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.controls button{background:var(--bg2);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:550;transition:all .2s}
+.controls button:hover{color:var(--ink);border-color:var(--dim)}
+.controls button[aria-pressed=true]{background:var(--ink);color:#0b1117;border-color:var(--ink)}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.readout{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.readout small{display:block;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.readout b{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--v,var(--ink))}
+.readout span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.steps button{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 10px 8px;text-align:left;color:var(--muted);line-height:1.3;position:relative;transition:all .2s}
+.steps button b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
+.steps button small{font-size:12px}
+.steps button[aria-pressed=true]{border-color:var(--c);background:var(--card2);box-shadow:inset 0 3px 0 var(--c)}
+.watch{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:14px;color:var(--muted)}
+.watch .chip{display:inline-flex;align-items:center;gap:7px;background:#0a1016;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--ink);font-size:13.5px}
+.watch .chip i{width:9px;height:9px;border-radius:2px;background:var(--c);display:inline-block}
+
+.dash{margin-top:30px}
+.dash-head{display:flex;align-items:baseline;gap:14px;margin-bottom:12px}
+.dash-head h3{margin:0;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--info)}
+.dash-head span{font-size:14px;color:var(--muted)}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:14px}
+.pcard{background:#111a24;border:1px solid #243242;border-radius:10px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pcard .ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pcard .pt{font-size:14px;font-weight:600}
+.pcard .pw{font-size:11.5px;color:var(--dim);white-space:nowrap;font-family:var(--mono)}
+.pcard svg{width:100%;height:auto;display:block}
+.pcard .pr{font-size:13.5px;color:var(--muted);margin:0;line-height:1.45}
+.pcard .pr b{color:var(--ink)}
+.pcard .ill{font-size:10.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.pcard.wide{grid-column:1/-1}
+.pcard.stat{align-items:stretch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.tile{border-radius:8px;padding:10px 10px 8px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;color:#0b1117;background:var(--c)}
+.tile.outline{background:#111a24;color:var(--ink);border:1px solid #243242}
+.tile.outline b{color:var(--c)}
+.tile small{font-size:11px;line-height:1.25;font-weight:600;opacity:.9}
+.tile b{font-size:26px;line-height:1;font-weight:700}
+.tile-groups{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:8px}
+.tile-groups .tiles{grid-template-columns:repeat(8,1fr)}
+.tile.expected{background:var(--expected);color:var(--ink)}
+.tile.expected small{opacity:.95}
+.tile-groups > div{border-top:2px solid var(--c);padding-top:8px}
+.tile-groups h4{margin:0 0 8px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+
+details{background:var(--bg2);border:1px solid var(--line);border-radius:12px;margin:14px 0 0;max-width:1000px}
+details summary{padding:12px 18px;cursor:pointer;font-weight:600;color:var(--muted);list-style:none;display:flex;gap:10px;align-items:center}
+details summary::before{content:"+";font-family:var(--mono);color:var(--info);width:14px}
+details[open] summary::before{content:"–"}
+details summary:hover{color:var(--ink)}
+details .body{padding:0 18px 16px;color:var(--muted);font-size:15px}
+details .body p{margin:0 0 10px}
+details .body b{color:var(--ink)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.mini h3{font-size:15px;margin-bottom:4px}.mini p{margin:0;font-size:14px;color:var(--muted)}
+.eq{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:15px;color:var(--muted);margin:14px 0 0}
+.eq span{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.eq b{color:var(--ink)}
+.agree{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.agree button{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;text-align:left;color:var(--muted);line-height:1.35;transition:all .2s}
+.agree button b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:3px}
+.agree button small{font-size:12.5px;display:block}
+.agree button em{display:block;font-style:normal;font-size:11.5px;margin-top:8px;color:var(--c);font-weight:600}
+.agree button[aria-pressed=true]{border-color:var(--kubelet);background:var(--card2)}
+.slider{display:flex;align-items:center;gap:14px;margin:0 0 14px;color:var(--muted);font-size:14px}
+.slider input{width:260px;accent-color:var(--pods)}
+.slider output{font-family:var(--mono);color:var(--ink);min-width:48px}
+.map{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;align-items:start}
+.walk{display:flex;flex-direction:column;gap:10px}
+.walk div{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:28px 1fr;gap:10px;color:var(--muted);font-size:14.5px;transition:all .25s}
+.walk div b{color:var(--ink);display:block;font-size:14.5px}
+.walk div .n{width:26px;height:26px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.walk div.on{border-color:var(--kubelet)}.walk div.on .n{background:var(--kubelet);color:#000;border-color:var(--kubelet)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.gloss div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--muted)}
+.gloss b{display:block;color:var(--ink);font-size:14px}
+.gloss i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:6px;vertical-align:-1px}
+.pindex{columns:2;column-gap:28px;font-size:14px;color:var(--muted)}
+.pindex h4{margin:0 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--info);break-after:avoid}
+.pindex ul{margin:0 0 16px;padding-left:18px}.pindex li{margin:2px 0}
+.pindex b{color:var(--ink);font-weight:600}
+footer{padding:50px 64px 70px;border-top:1px solid var(--line);color:var(--muted);font-size:14.5px;line-height:1.7;margin-top:60px;background:var(--bg2)}
+footer strong{display:block;color:var(--ink);font-size:18px;margin-bottom:6px}
+svg text{font-family:var(--sans)}
+.hatch{fill:url(#hatch)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 1.2s ease-in-out infinite}
+@media(max-width:1100px){.layout{grid-template-columns:220px minmax(0,1fr)}.hero,.chapter,footer{padding-left:36px;padding-right:36px}.steps{grid-template-columns:repeat(3,1fr)}.agree{grid-template-columns:repeat(2,1fr)}.tile-groups .tiles{grid-template-columns:repeat(4,1fr)}.map{grid-template-columns:1fr}}
+@media(max-width:760px){.layout{display:block}.rail{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}.stack{flex-direction:row;overflow:auto}.stack a{min-width:150px}.rail-legend,.rail-by{display:none}.hero,.chapter,footer{padding-left:20px;padding-right:20px}.howto,.two,.three{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.pindex{columns:1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+@media print{body{background:#fff;color:#111}.rail,.controls,.skip{display:none}.layout{display:block}.scene,.pcard,.mini,details,.readout,.tile.outline{background:#fff;border-color:#bbb;color:#111}.pcard .pr,.caption,.intro{color:#333}.lesson{background:#f3f3f3;color:#111}}
+</style></head>
+<body><a class="skip" href="#work">Skip to the guide</a>
+<svg width="0" height="0" style="position:absolute"><defs>
+<pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#1a2430"/><line x1="0" y1="0" x2="0" y2="6" stroke="#5B6B85" stroke-width="2"/></pattern>
+<pattern id="hatchred" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#2a1a1e"/><line x1="0" y1="0" x2="0" y2="6" stroke="#F2495C" stroke-width="2"/></pattern>
+<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#9fb0c0"/></marker>
+<marker id="arrw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" fill="#FADE2A"/></marker>
+</defs></svg>
+<div class="layout">
+<aside class="rail">
+<div class="rail-title">Node protection<strong>A visual journey through the node</strong></div>
+<ul class="stack" id="stack">
+<li style="--c:var(--pods)"><a href="#work" style="--c:var(--pods)"><span class="num">01</span><span><b>The node's own work</b><small>what happens before a pod runs</small></span></a></li>
+<li style="--c:var(--kubelet)"><a href="#waiting" style="--c:var(--kubelet)"><span class="num">02</span><span><b>Busy is not waiting</b><small>CPU use vs CPU pressure</small></span></a></li>
+<li style="--c:var(--kubelet)"><a href="#lane" style="--c:var(--kubelet)"><span class="num">03</span><span><b>The reserved lane</b><small>four CPUs, four agreements</small></span></a></li>
+<li style="--c:var(--containerd)"><a href="#memory" style="--c:var(--containerd)"><span class="num">04</span><span><b>The memory floor</b><small>keeping the host's pages</small></span></a></li>
+<li style="--c:var(--agents)"><a href="#disk" style="--c:var(--agents)"><span class="num">05</span><span><b>The teardown path</b><small>a stop that waits on the disk</small></span></a></li>
+<li style="--c:var(--info)"><a href="#network" style="--c:var(--info)"><span class="num">06</span><span><b>Three network jobs</b><small>address, Service map, packet</small></span></a></li>
+<li style="--c:var(--grey)"><a href="#evidence" style="--c:var(--grey)"><span class="num">07</span><span><b>Trust the evidence</b><small>what a blank means</small></span></a></li>
+<li style="--c:var(--ok)"><a href="#walk" style="--c:var(--ok)"><span class="num">08</span><span><b>Walk the dashboard</b><small>one node, one window</small></span></a></li>
+<li style="--c:var(--line)"><a href="#reference" style="--c:var(--dim)"><span class="num">··</span><span><b>Reference</b><small>tiles and panels by section</small></span></a></li>
+</ul>
+<div class="rail-legend"><div><i style="--c:var(--pods)"></i>Pods (application work)</div><div><i style="--c:var(--kubelet)"></i>kubelet</div><div><i style="--c:var(--containerd)"></i>containerd (container runtime)</div><div><i style="--c:var(--agents)"></i>Node agents</div><div style="margin-top:8px"><i style="--c:var(--ok)"></i>fine &nbsp;<i style="--c:var(--warn)"></i>warning &nbsp;<i style="--c:var(--bad)"></i>harm</div><div style="color:var(--dim);margin-top:4px">The dashboard uses the same colours.</div></div>
+<div class="rail-by"><b>Prepared by Shane Corbett</b><br>Kubernetes Specialist<br><a href="mailto:shancor@amazon.com">shancor@amazon.com</a></div>
+</aside>
+<main>
+<header class="hero" id="top">
+<span class="kicker">Kubernetes node protection · Companion to the troubleshooting dashboard</span>
+<h1>Can the node still <em>run its pods?</em></h1>
+<p class="lede">A node can be 100% busy and perfectly healthy. It can also report Ready while quietly failing the work only it can do. This guide shows the difference one layer at a time, and where each layer appears on the dashboard.</p>
+<div class="byline"><span class="dot"></span>Prepared by <b>Shane Corbett</b> · Kubernetes Specialist · <a href="mailto:shancor@amazon.com">shancor@amazon.com</a></div>
+<div class="howto">
+<div><span class="tag" style="--c:var(--kubelet)">SCENE</span><b>Watch what happens inside the node</b><p>Each chapter opens with an interactive picture. Press the buttons; the picture carries the idea.</p></div>
+<div><span class="tag" style="--c:var(--info)">DASHBOARD</span><b>See the panel that watches it</b><p>Below each scene, the dashboard's panels are redrawn in their own colours, with the one thing to read marked.</p></div>
+<div><span class="tag" style="--c:var(--grey)">GO DEEPER</span><b>Open the detail only if you want it</b><p>Thresholds, sampling caveats and lab numbers wait behind the "+" folds. Skip them on a first read.</p></div>
+</div>
+<p class="caption" style="margin-top:18px">Charts in this guide are drawn to show a shape, not recorded from a cluster, unless a caption says the value came from the lab. The dashboard this guide follows is <i>Node protection: can the node still run its pods?</i>, built from the engineering narrative <i>A private lane for the node</i>. Panel titles are quoted as the dashboard shows them.</p>
+</header>
+
+<section class="chapter" id="work">
+<div class="chapter-head"><span class="kicker" style="color:var(--pods)">01 · The node's own work</span><h2>Before a pod runs, the node has to do work of its own.</h2><p class="intro">The scheduler has picked a node. Nothing is running yet. Step through what has to happen next, and notice who does each piece: not the pod, the node.</p></div>
+<div class="scene">
+<span class="label">Scene · one pod's life on a node · press a step</span>
+<div class="steps" id="pod-steps" style="margin-top:12px">
+<button type="button" data-step="0" aria-pressed="true" style="--c:var(--kubelet)"><b>1 · Notice</b><small>kubelet sees the pod</small></button>
+<button type="button" data-step="1" aria-pressed="false" style="--c:var(--containerd)"><b>2 · Sandbox</b><small>network namespace, address</small></button>
+<button type="button" data-step="2" aria-pressed="false" style="--c:var(--containerd)"><b>3 · Containers</b><small>create, start</small></button>
+<button type="button" data-step="3" aria-pressed="false" style="--c:var(--kubelet)"><b>4 · Keep watching</b><small>PLEG, every second</small></button>
+<button type="button" data-step="4" aria-pressed="false" style="--c:var(--kubelet)"><b>5 · Heartbeat</b><small>lease, every 10 s</small></button>
+<button type="button" data-step="5" aria-pressed="false" style="--c:var(--agents)"><b>6 · Stop</b><small>signal, grace, teardown</small></button>
+</div>
+<svg id="pod-scene" viewBox="0 0 1000 320" role="img" aria-label="The kubelet, containerd, the CNI and the pod, with the calls between them">
+<g id="g-api" class="actor"><rect x="30" y="110" width="170" height="80" rx="12" fill="#1d2a38" stroke="#3b4d61" stroke-width="2"/><text x="115" y="143" text-anchor="middle" fill="#e8eef4" font-size="16" font-weight="600">API server</text><text x="115" y="166" text-anchor="middle" fill="#9fb0c0" font-size="12.5">the cluster's view</text></g>
+<g id="g-kubelet" class="actor"><rect x="300" y="110" width="170" height="80" rx="12" fill="#2b2615" stroke="#F5B83D" stroke-width="2"/><text x="385" y="143" text-anchor="middle" fill="#F5B83D" font-size="16" font-weight="600">kubelet</text><text x="385" y="166" text-anchor="middle" fill="#9fb0c0" font-size="12.5">drives every pod's life</text></g>
+<g id="g-containerd" class="actor"><rect x="570" y="110" width="170" height="80" rx="12" fill="#2b1f12" stroke="#E07B24" stroke-width="2"/><text x="655" y="143" text-anchor="middle" fill="#E07B24" font-size="16" font-weight="600">containerd</text><text x="655" y="166" text-anchor="middle" fill="#9fb0c0" font-size="12.5">the container runtime</text></g>
+<g id="g-cni" class="actor"><rect x="570" y="225" width="170" height="60" rx="12" fill="#23203a" stroke="#A78BFA" stroke-width="2"/><text x="655" y="250" text-anchor="middle" fill="#A78BFA" font-size="15" font-weight="600">aws-node (CNI)</text><text x="655" y="270" text-anchor="middle" fill="#9fb0c0" font-size="12">hands out pod addresses</text></g>
+<g id="g-pod" class="actor"><rect x="820" y="95" width="160" height="110" rx="12" fill="#13213a" stroke="#5B9BF8" stroke-width="2" stroke-dasharray="6 4" id="sandbox-rect"/><text x="900" y="117" text-anchor="middle" fill="#5B9BF8" font-size="13.5" font-weight="600">pod sandbox</text><rect id="c1" x="835" y="130" width="60" height="58" rx="7" fill="#5B9BF8" opacity=".25"/><rect id="c2" x="905" y="130" width="60" height="58" rx="7" fill="#5B9BF8" opacity=".25"/><text x="865" y="164" text-anchor="middle" fill="#e8eef4" font-size="12">app</text><text x="935" y="164" text-anchor="middle" fill="#e8eef4" font-size="12">sidecar</text></g>
+<g id="a-watch" class="arrow"><path d="M200 140 H300" stroke="#9fb0c0" stroke-width="2.5" marker-end="url(#arr)" fill="none"/><text x="250" y="130" text-anchor="middle" fill="#9fb0c0" font-size="12">pod assigned</text></g>
+<g id="a-cri" class="arrow"><path d="M470 150 H570" stroke="#9fb0c0" stroke-width="2.5" marker-end="url(#arr)" fill="none"/><text x="520" y="140" text-anchor="middle" fill="#9fb0c0" font-size="12" id="a-cri-label">CRI call</text></g>
+<g id="a-cni" class="arrow"><path d="M655 190 V225" stroke="#9fb0c0" stroke-width="2.5" marker-end="url(#arr)" fill="none"/><text x="668" y="212" fill="#9fb0c0" font-size="12">need an address</text></g>
+<g id="a-run" class="arrow"><path d="M740 150 H820" stroke="#9fb0c0" stroke-width="2.5" marker-end="url(#arr)" fill="none"/><text x="780" y="140" text-anchor="middle" fill="#9fb0c0" font-size="12" id="a-run-label">run</text></g>
+<g id="a-pleg" class="arrow"><path d="M470 118 Q 645 20 820 102" stroke="#F5B83D" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arr)" fill="none"/><text x="648" y="52" text-anchor="middle" fill="#F5B83D" font-size="12">PLEG: "what are my containers doing?" every second</text></g>
+<g id="a-lease" class="arrow"><path d="M330 110 Q 250 40 200 110" stroke="#F5B83D" stroke-width="2" marker-end="url(#arr)" fill="none"/><text x="262" y="58" text-anchor="middle" fill="#F5B83D" font-size="12">lease renewed every 10 s</text></g>
+<g id="a-stop" class="arrow"><path d="M900 205 V255 H760" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arr)" fill="none"/><text x="985" y="306" text-anchor="end" fill="#A78BFA" font-size="12">exit → remove task → unmount → remove sandbox</text></g>
+</svg>
+<p class="caption" id="pod-text" style="min-height:48px;margin-top:6px"></p>
+<div class="watch"><span>The dashboard watches this step with</span><span id="pod-watch"></span></div>
+</div>
+<div class="two" style="margin-top:18px">
+<div class="scene" style="margin:0"><span class="label">Ready is a narrow question</span>
+<svg viewBox="0 0 480 190" role="img" aria-label="A node card showing Ready while three node operations fail">
+<rect x="10" y="12" width="460" height="166" rx="14" fill="#1d2a38" stroke="#3b4d61" stroke-width="2"/>
+<text x="30" y="44" fill="#e8eef4" font-size="16" font-weight="650">ip-10-0-41-7</text>
+<rect x="340" y="26" width="112" height="28" rx="14" fill="#3FB950"/><text x="396" y="45" text-anchor="middle" fill="#0b1117" font-size="13.5" font-weight="700">Ready ✓</text>
+<text x="30" y="70" fill="#9fb0c0" font-size="12.5">Ready = the kubelet can still talk to the API server. That is all it tests.</text>
+<g font-size="13.5">
+<text x="40" y="100" fill="#3FB950">✓</text><text x="60" y="100" fill="#e8eef4">Heartbeat renewed</text>
+<text x="40" y="124" fill="#F2495C">✗</text><text x="60" y="124" fill="#e8eef4">run_podsandbox failing</text>
+<text x="40" y="148" fill="#F2495C">✗</text><text x="60" y="148" fill="#e8eef4">stop_container taking 60 s</text>
+<text x="260" y="100" fill="#F2495C">✗</text><text x="280" y="100" fill="#e8eef4">PLEG 90 s stale</text>
+<text x="260" y="124" fill="#3FB950">✓</text><text x="280" y="124" fill="#e8eef4">Metrics scraped</text>
+<text x="260" y="148" fill="#9fb0c0">–</text><text x="280" y="148" fill="#9fb0c0">CPU 100% busy (allowed)</text>
+</g></svg>
+<p class="caption">A node like this stays Ready. Pods assigned to it still do not start, and pods leaving it do not go. The operations need their own evidence.</p></div>
+<div class="scene" style="margin:0"><span class="label">Two clocks for "pod start"</span>
+<svg viewBox="0 0 480 190" role="img" aria-label="Pod start measured end to end and as the node's own share">
+<line x1="30" y1="60" x2="450" y2="60" stroke="#2a3948"/><line x1="30" y1="130" x2="450" y2="130" stroke="#2a3948"/>
+<text x="30" y="40" fill="#9fb0c0" font-size="12.5">End to end (from pod creation): waits for the scheduler and for a new node</text>
+<rect x="30" y="50" width="170" height="20" rx="4" fill="#5B6B85"/><text x="115" y="65" text-anchor="middle" fill="#e8eef4" font-size="11.5">scheduling, new node</text>
+<rect x="200" y="50" width="90" height="20" rx="4" fill="#F5B83D"/><text x="245" y="65" text-anchor="middle" fill="#0b1117" font-size="11.5" font-weight="600">node's share</text>
+<text x="30" y="110" fill="#9fb0c0" font-size="12.5">The node's share (from the kubelet seeing the pod): the part protection owns</text>
+<rect x="200" y="120" width="90" height="20" rx="4" fill="#F5B83D"/><text x="245" y="135" text-anchor="middle" fill="#0b1117" font-size="11.5" font-weight="600">node's share</text>
+<text x="300" y="135" fill="#9fb0c0" font-size="12">image pulls included</text>
+<text x="30" y="172" fill="#9fb0c0" font-size="12.5">The tiles use the node's share, on nodes up 15 minutes or more ("settled").</text>
+</svg>
+<p class="caption">During a scale-up the end-to-end time runs to minutes while nodes are being created. That says nothing about the node. The dashboard judges the node by its own share, once it has settled.</p></div>
+</div>
+<p class="lesson">Alert on the operations: runtime calls, the pod-state check, the heartbeat, pod start and stop.<small>Everything else on the dashboard exists to explain them. The dashboard's Harm row of tiles is this list.</small></p>
+
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Is any node being harmed? Three rows of tiles. Red is harm (orange while it is one or two nodes), yellow is risk, blue-grey is expected. Every harm and risk tile counts nodes; the two blue-grey counters sum.</span></div>
+<div class="tile-groups">
+<div style="--c:var(--bad)"><h4>Harm · a node operation failed or the node froze</h4><div class="tiles">
+<div class="tile" style="--c:var(--ok)"><small>Runtime refused work</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Node software restarted</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Kubelet lost track of its pods</small><b>0</b></div>
+<div class="tile" style="--c:var(--orange)"><small>Node stopped checking in</small><b>1</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Kubelet went silent</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Node stalled on memory</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Pods slow to start</small><b>8.4 s</b></div>
+<div class="tile" style="--c:var(--ok)"><small>CPU split misconfigured</small><b>0</b></div>
+</div></div>
+<div style="--c:var(--warn)"><h4>At risk · struggling, nothing has failed yet</h4><div class="tiles">
+<div class="tile" style="--c:var(--ok)"><small>Runtime errors, isolated</small><b>0</b></div>
+<div class="tile" style="--c:var(--warn)"><small>Heartbeat late</small><b>1</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Node software starved of CPU</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Node software stalled on memory</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Node stalled on disk</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Stuck tasks</small><b>0</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Containers slow to stop</small><b>3.1 s</b></div>
+<div class="tile" style="--c:var(--ok)"><small>Nodes with missing telemetry</small><b>0</b></div>
+</div></div>
+<div style="--c:var(--expected)"><h4>Expected or context · not harm on its own</h4><div class="tiles" style="grid-template-columns:repeat(3,1fr)">
+<div class="tile expected"><small>Errors while nodes boot</small><b>108</b></div>
+<div class="tile expected"><small>Out-of-memory kills, all</small><b>2</b></div>
+<div class="tile outline" style="--c:var(--info)"><small>Nodes in view</small><b>412</b></div>
+</div></div>
+</div>
+<p class="caption" style="margin-bottom:14px">Illustrative values. Below the tiles sit <b>When did it start?</b>, a timeline with one row per tile question (orange or red for harm, yellow for risk, blue-grey for expected, green for checked and clear, a gap for no data) and, beside it, <b>Where to look next</b>, which maps the first row that changed to the section to open. Then the triage table, <b>Which nodes need attention?</b>: one row per node that crossed a line, harm first, a reading shown only in the cells that crossed. Click a node's name and every panel focuses on it.</p>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Runtime refused work, by kind of call</span><span class="pw">section 1</span></div><svg data-chart="cri"></svg><p class="pr"><b>Read it:</b> blue-grey bars are calls that failed in a node's first 5 minutes, expected in every scale-up (the <b>Errors while nodes boot</b> tile). Coloured bars after that are harm. Only sandbox calls failing points at networking; many kinds failing together points at the node itself.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Heartbeat age, oldest nodes</span><span class="pw">section 1</span></div><svg data-chart="lease"></svg><p class="pr"><b>Read it:</b> seconds since each node renewed its lease, seen from the API server. Yellow at 30 s is the source guide's line and the <b>Heartbeat late</b> risk tile; red at 60 s is the dashboard's harm line, <b>Node stopped checking in</b>. Healthy nodes stay under about 15 s, even at 4,000 nodes. A node far over 60 s froze or lost its network.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Pod start: the node's share and end to end</span><span class="pw">section 1</span></div><svg data-chart="start"></svg><p class="pr"><b>Read it:</b> only the two settled-nodes lines (mean and 99th percentile) are the node's responsibility. When the grey end-to-end line climbs alone, the fleet is waiting for capacity, not failing nodes. The settled 99th percentile stops at 60 s: flat at 60 means 60 s or more.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: the first 5 minutes, the 15-minute settling rule, and the rest of section 1</summary><div class="body">
+<p><b>First 5 minutes.</b> A brand-new node's kubelet asks for sandboxes before its networking is ready, and those calls fail in every healthy scale-up (108 of 109 errors in a healthy 50K-pod run). The dashboard counts them in the blue-grey <b>Errors while nodes boot</b> tile and does not call them harm. <b>Runtime refused work</b> counts nodes, not errors, and applies the source guide's paging rule: errors in two 5-minute windows, or on three or more nodes at once. A single error that does not repeat sits in the risk row as <b>Runtime errors, isolated</b> (a healthy 50K run had one).</p>
+<p><b>Settled nodes.</b> Pod start and the waiting tiles only judge nodes that have reported for 15 minutes (25 minutes for the 10-minute sustained readings). Young nodes start pods slowly while they pull images and build their first Service map; that is capacity, not protection.</p>
+<p><b>Section 1 also holds:</b> <b>Kubelet's pod-state check age, oldest nodes</b> (over 60 s its view of its containers is stale), <b>Kubelets not answering</b>, <b>Node software restarted</b> (a new harm signal: the kubelet or containerd restarted after the node's first 5 minutes, so it crashed or was killed for memory; the kill itself is not in the metrics, the node's journal names it) and <b>Container stop time, slowest nodes</b>.</p>
+<p><b>Moved to the Engineer's detail tab</b> (section 3): <b>Runtime call time, mean, by kind</b> (a mean on a log scale: one very slow call among many reads small), <b>Pod-state check duration, slowest nodes</b> (how long the PLEG pass itself took; coarse buckets make the lines two-humped) and <b>Pod start time, all pods</b> (a heatmap: a healthy fleet is one bright band near the bottom). They have no harm line of their own; read them after section 1 has named a node and a time.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="waiting">
+<div class="chapter-head"><span class="kicker" style="color:var(--kubelet)">02 · Busy is not waiting</span><h2>A CPU at 100% tells you nothing about who got their turn.</h2><p class="intro">Here is one CPU over ten seconds. The pods are allowed to fill it. The question is what happens when the kubelet has something to do.</p></div>
+<div class="scene">
+<span class="label">Scene · one CPU, ten seconds · the kubelet wakes up four times</span>
+<div class="controls" style="margin-top:12px" id="wait-controls"><button type="button" data-wait="prompt" aria-pressed="true">Pods busy, kubelet prompt</button><button type="button" data-wait="waiting" aria-pressed="false">Pods busy, kubelet waiting</button><button type="button" data-wait="stall" aria-pressed="false">Everyone stalled on memory</button></div>
+<svg id="wait-scene" viewBox="0 0 1000 230" role="img" aria-label="A CPU timeline showing pod tasks running and the kubelet either running at once or waiting"></svg>
+<div class="readouts">
+<div class="readout"><small>CPU use</small><b id="ro-use" style="--v:var(--pods)">100%</b><span>same in every scenario</span></div>
+<div class="readout"><small>kubelet CPU waiting</small><b id="ro-wait" style="--v:var(--ok)">0%</b><span id="ro-wait-s">share of time with work but no CPU</span></div>
+<div class="readout"><small>Full stall</small><b id="ro-stall" style="--v:var(--ok)">0%</b><span>share of time nobody on the node moved</span></div>
+<div class="readout"><small>What the pods see</small><b id="ro-pods" style="--v:var(--ink)">fine</b><span id="ro-pods-s">starts and stops on time</span></div>
+</div>
+<p class="caption" id="wait-caption">The pods use every free cycle. Each time the kubelet wakes, a CPU is handed to it within microseconds: hatched waiting is almost zero. CPU use reads 100% and nothing is wrong.</p>
+</div>
+<div class="three">
+<div class="mini"><h3 style="color:var(--pods)">CPU use</h3><p>"How much of the time were the CPUs executing?" High is allowed here: the pods may fill theirs. It cannot say who was delayed.</p></div>
+<div class="mini"><h3 style="color:var(--kubelet)">CPU waiting (pressure)</h3><p>"What share of the time did this group have work ready and no CPU?" This names the delayed. 2% means 2% of the window spent waiting, not 2% fewer cores.</p></div>
+<div class="mini"><h3 style="color:var(--bad)">Full stall</h3><p>"What share of the time was every task in the group stuck?" On memory or disk. The group made no progress at all, whoever owned the CPUs.</p></div>
+</div>
+<p class="lesson">CPU use measures execution. CPU waiting names who was delayed. Full stall means nobody moved.<small>Section 2 of the dashboard is built on the second and third, and treats the first as context only.</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Section 2 · Why: was the node's own software waiting? Amber is the node's software, violet its agents, blue the pods.</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Node software waiting for CPU</span><span class="pw">section 2</span></div><svg data-chart="whost"></svg><p class="pr"><b>Read it:</b> solid lines are the worst node, dashed the median. Over the 2% line for 10 minutes the lane is losing promptness. It is the cause only when a section 1 operation failed in the same minutes.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Node agents waiting for CPU, top 8</span><span class="pw">section 2</span></div><svg data-chart="wagents"></svg><p class="pr"><b>Read it:</b> this ranks the <i>delayed</i>, not the busy. An agent waiting several percent is either off the reserved CPUs or the reserved CPUs are full. Chapter 03 shows how to tell.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Node CPU use (context)</span><span class="pw">section 2</span></div><svg data-chart="wutil"></svg><p class="pr"><b>Read it:</b> never page on this. High use with low waiting above it is the protection working. Select one node and <b>Busiest pods on this node</b> appears below it to show the demand.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: where these numbers come from, and the 10-minute rule</summary><div class="body">
+<p><b>Pressure Stall Information (PSI)</b> is the kernel's own accounting, per cgroup and for the whole node. "Some" pressure is the share of time at least one task waited; "full" is the share when every task waited. The dashboard reads CPU "some" for the kubelet's and containerd's cgroups and for each agent pod, and memory and I/O "full" for the hosts and the node.</p>
+<p><b>Held for 10 minutes.</b> The tiles and the table take the lowest 5-minute reading inside a 10-minute window, so one burst does not count. The lines are the source guide's: 2% CPU waiting, 5% full stall. Averaged over whole runs at 75K to 200K pods, the average node's kubelet waited 0.35 to 0.47% and its containerd 0.64 to 0.87%.</p>
+<p><b>Node software stalled on memory</b> (also in section 2, and a tile in the risk row) is the full-stall share for the kubelet's and containerd's cgroups, with the same 5% line held 10 minutes; the whole node stalling the same way is the harm tile <b>Node stalled on memory</b>; chapter 04 shows why it matters. <b>Whole-node run queue wait per CPU</b> sums every task's waiting on the node and divides by CPU count. It can exceed 1 because several tasks wait at once. It says the CPUs are contended, not whose wait mattered.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="lane">
+<div class="chapter-head"><span class="kicker" style="color:var(--kubelet)">03 · The reserved lane</span><h2>Four CPUs the pods never touch.</h2><p class="intro">Each protected node keeps 4 of its 32 vCPUs for its own software: the kubelet, containerd, the shims that supervise containers, and a short list of agents. The pods run on the other 28. That sounds like one setting. It is four agreements.</p></div>
+<div class="scene">
+<span class="label">Scene · a 32-vCPU node · which CPUs are the lane, and who is allowed on them</span>
+<div class="controls" style="margin-top:12px" id="topo-controls"><button type="button" data-topo="intel" aria-pressed="true">Intel: two whole cores, both threads</button><button type="button" data-topo="other" aria-pressed="false">AMD and Graviton: CPUs 0 to 3</button></div>
+<svg id="cpu-board" viewBox="0 0 1000 250" role="img" aria-label="Thirty-two CPU squares with the four reserved ones highlighted"></svg>
+<div class="agree" id="agree">
+<button type="button" data-ag="capacity" aria-pressed="true" style="--c:var(--info)"><b>1 · Capacity</b><small>The scheduler is told 4 vCPUs are reserved: allocatable is 28, not 32. Karpenter and the kubelet must say the same number.</small><em>Checked by the dashboard</em></button>
+<button type="button" data-ag="topology" aria-pressed="false" style="--c:var(--agents)"><b>2 · Topology</b><small>The 4 are whole cores. On Intel that means both hardware threads of two cores, so a pod on the sibling thread cannot steal the core.</small><em>Checked on the node, every minute</em></button>
+<button type="button" data-ag="placement" aria-pressed="false" style="--c:var(--info)"><b>3 · Placement</b><small>systemd pins the host services to the lane; the kubelet's static CPU manager keeps pods off it. Both sides, or the lane leaks.</small><em>Kubelet side checked by the dashboard</em></button>
+<button type="button" data-ag="agents" aria-pressed="false" style="--c:var(--agents)"><b>4 · Agent exception</b><small>A containerd plugin moves the listed agents (aws-node, kube-proxy, DNS cache, log shipper, exporters) onto the lane. It fails open: if it drops, agents quietly land with the pods.</small><em>Checked on the node, every minute</em></button>
+</div>
+<p class="caption" id="agree-caption">Capacity: subtracting 4 from allocatable only changes scheduling arithmetic. The scheduler stops placing 4 vCPUs' worth of requests here. It does not move a single process.</p>
+</div>
+<div class="two">
+<div class="mini"><h3>An idle lane is doing its job</h3><p>Node work arrives in bursts, when many pods start or stop together. The lane needs room for those bursts. In a healthy 50K run the median node's lane ran under 10% busy; that is not waste.</p></div>
+<div class="mini"><h3>A CPU limit is a different wait</h3><p>An agent can sit on the right CPUs and still be stopped by its own CPU limit (throttling). More reserved CPUs do not help it; a higher limit does. The dashboard keeps the two apart.</p></div>
+</div>
+<p class="lesson">A reservation is four agreements: capacity, topology, placement, and the agent exception.<small>The dashboard proves the two it can see from outside. The node's own per-minute check proves the rest and writes the result to its journal.</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Section 3 · CPU lane tab</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">How the protected nodes split their CPUs</span><span class="pw">CPU lane</span></div><svg data-chart="split"></svg><p class="pr"><b>Read it:</b> the average protected node: all vCPUs, the pods' shared pool, the lane. Beside it three small tiles: <b>4 vCPUs reserved</b> (how many nodes), <b>Static CPU manager</b> (should be the same count) and <b>Pinning errors</b> (should be 0).</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Reserved CPUs: how busy</span><span class="pw">CPU lane</span></div><svg data-chart="lanebusy"></svg><p class="pr"><b>Read it:</b> the lane is an availability reserve. The median node sits around 10 to 17% as the fleet grows. Worry only when it sits near 100% for minutes while the kubelet or containerd wait in section 2: then the lane is too small for this node's churn, or something unlisted runs on it.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Node agents throttled by their CPU limit</span><span class="pw">CPU lane</span></div><svg data-chart="throttle"></svg><p class="pr"><b>Read it:</b> share of scheduling periods an agent hit its own limit. Steady throttling means that agent needs a higher limit, not more reserved CPUs. In a healthy 50K run one forensics agent sat at 26 to 28%.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: the "CPU split misconfigured" tile, and what metrics cannot prove</summary><div class="body">
+<p><b>CPU split misconfigured</b> (a tile in the Harm row) compares two numbers on every node with a static CPU manager: the CPUs the scheduler was told are reserved (capacity minus allocatable) and the CPUs the kubelet actually keeps pods off (capacity minus its shared pool and any whole CPUs it gave a pod). A difference means accounting and placement describe different boundaries. The guidance is blunt: replace the node; an incomplete node makes every measurement on it uninterpretable.</p>
+<p><b>What metrics cannot prove.</b> Which physical CPUs are in the lane, whether they are whole cores, whether systemd's and the plugin's placement took effect. Those need the live cgroup state, which the node's per-minute check reads. The Configuration tab's <b>Failed contract checks</b> tile is wired for a published version of that check; in the lab the check writes to the journal instead, so the tile reads "not exported" in grey. Grey there means unverified by metrics, never passing.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="memory">
+<div class="chapter-head"><span class="kicker" style="color:var(--containerd)">04 · The memory floor</span><h2>Owning a CPU does not keep your code in memory.</h2><p class="intro">Reserved CPUs reserve nothing in RAM. When the pods fill memory, the kernel takes pages back from everyone, including the kubelet's and containerd's own code and the image files every pod runs from. Push the slider and watch.</p></div>
+<div class="scene">
+<span class="label">Scene · the node's memory as the pods grow · toggle the floor</span>
+<div class="controls" style="margin-top:12px" id="floor-controls"><button type="button" data-floor="off" aria-pressed="true">Without a floor</button><button type="button" data-floor="on" aria-pressed="false">With a floor (memory.min)</button></div>
+<div class="slider"><span>Pod memory demand</span><input type="range" id="mem-slider" min="0" max="100" value="55" aria-label="Pod memory demand"><output id="mem-out">55%</output></div>
+<svg id="mem-scene" viewBox="0 0 1000 275" role="img" aria-label="A bar of node memory divided between pods, the host services and free memory, changing with demand"></svg>
+<div class="readouts">
+<div class="readout"><small>Host code read back from disk</small><b id="ro-majflt" style="--v:var(--ok)">0 /s</b><span>major faults, kubelet + containerd</span></div>
+<div class="readout"><small>Heartbeat age</small><b id="ro-hb" style="--v:var(--ok)">10 s</b><span>seen from the API server</span></div>
+<div class="readout"><small>Node</small><b id="ro-node" style="--v:var(--ok)">working</b><span id="ro-node-s">pods start and stop</span></div>
+<div class="readout"><small>Pods</small><b id="ro-oom" style="--v:var(--ok)">all running</b><span id="ro-oom-s">no OOM kills</span></div>
+</div>
+<p class="caption" id="mem-caption">Plenty of room. The host's code and containerd's image pages sit in memory untouched.</p>
+</div>
+<div class="two">
+<div class="mini"><h3>A floor is not a ceiling</h3><p><code>memory.min</code> protects the memory a group holds beneath the line from reclaim. It allocates nothing in advance and caps nothing: use may go over the floor, and that is allowed.</p></div>
+<div class="mini"><h3>The workload pays for it</h3><p>With the host's pages off limits, memory runs out sooner elsewhere. A pod is OOM-killed while the node keeps answering. That is a trade, not a free fix: the pod was still lost.</p></div>
+</div>
+<div class="eq" aria-label="The floors configured at 170 pods"><span>kubelet <b>775 MiB</b></span>+<span>containerd <b>3,774 MiB</b></span>=<span>runtime.slice <b>4,549 MiB</b></span><span style="border:0;background:none;padding-left:0;font-size:13.5px">configured in the protected profile at 170 pods and 2,304 MiB of unpacked images; another class needs its own sum</span></div>
+<p class="lesson">The sign of a missing floor is the host reading its own code back from disk during memory pressure.<small>Without one, the lab's kubelet read back 888 to 4,453 pages a second and nodes went not Ready. With one, 1 to 11 pages a second and the node stayed up.</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Section 3 · Memory floor tab</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Node software's code read back from disk</span><span class="pw">Memory floor</span></div><svg data-chart="majflt"></svg><p class="pr"><b>Read it:</b> pages a second the two programs had to fetch back (major faults). One burst when load first arrives is normal. A steady rate during pressure means the floor is missing or too small.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Node software's memory in use, largest node</span><span class="pw">Memory floor</span></div><svg data-chart="ws"></svg><p class="pr"><b>Read it:</b> dashed lines are the configured floors (775 and 3,774 MiB), drawn as references; no live <code>memory.min</code> is read. containerd's working set includes the image files it unpacked, which is why its floor is the large one.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Whole node stalled on memory</span><span class="pw">Memory floor</span></div><svg data-chart="memstall"></svg><p class="pr"><b>Read it:</b> share of time every task on the node waited for memory. Over 5% for 10 minutes is the harm tile <b>Node stalled on memory</b>. A node that stalls hard stops being scraped exactly then, so a gap in the line can hide the worst.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: reclaim, OOM kills and the late MemoryPressure condition</summary><div class="body">
+<p><b>Node-wide reclaim</b> shows pages scanned by tasks freeing memory for themselves and file pages read back soon after eviction. It says the node is short of memory. It does not say whose pages were taken; the code-read-back panel names the victim.</p>
+<p><b>Out-of-memory kills and memory pressure.</b> The node-wide kill counter (and the <b>Out-of-memory kills, all</b> tile) does not identify the victim. On a floored node a pod kill under pressure is consistent with the floor working. A kill of the kubelet or containerd is harm, but the kernel charges that kill to the node as a whole, so the metrics cannot name the victim. The dashboard reads the consequence instead: the <b>Node software restarted</b> harm tile and its section 1 panel count restarts after the node's first 5 minutes; the node's journal says whether it was a crash or a kill. Kills arriving with a node that stopped checking in are harm too. <b>MemoryPressure</b> is a late condition; do not wait for it before reading the stall panels.</p>
+<p><b>The floor does not stop every stall.</b> Floored kubelets still stalled 13 to 22% while the pods sat at their memory ceiling, on nodes that never went not Ready. What the floor buys is that their pages stay, so the stall ends instead of becoming a freeze.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="disk">
+<div class="chapter-head"><span class="kicker" style="color:var(--agents)">05 · The teardown path</span><h2>Stopping a container is work too, and it can wait on the disk.</h2><p class="intro">A stop looks like one event. It is two: the application shutting down on its own schedule, then the runtime cleaning up after it. Only the second is the node's problem, and the kernel can leave it sleeping on the disk.</p></div>
+<div class="scene">
+<span class="label">Scene · one container stop, second by second · toggle the disk</span>
+<div class="controls" style="margin-top:12px" id="stop-controls"><button type="button" data-stop="quiet" aria-pressed="true">Quiet root volume</button><button type="button" data-stop="busy" aria-pressed="false">Root volume saturated</button><button type="button" data-stop="grace" aria-pressed="false">Pod ignores its stop signal</button></div>
+<svg id="stop-scene" viewBox="0 0 1000 235" role="img" aria-label="A timeline of a container stop: signal, grace period, exit, runtime teardown"></svg>
+<div class="readouts">
+<div class="readout"><small>Container stop time</small><b id="ro-stop" style="--v:var(--ok)">2.3 s</b><span>what the kubelet measures</span></div>
+<div class="readout"><small>Of which, the pod's own</small><b id="ro-grace" style="--v:var(--ink)">1.5 s</b><span>application shutdown</span></div>
+<div class="readout"><small>Of which, the node's</small><b id="ro-teardown" style="--v:var(--ok)">0.8 s</b><span>runtime cleanup</span></div>
+<div class="readout"><small>Node disk stall</small><b id="ro-io" style="--v:var(--ok)">0%</b><span id="ro-io-s">every task waiting on I/O</span></div>
+</div>
+<p class="caption" id="stop-caption">The application exits inside its grace period; the runtime removes the task, unmounts the writable layer and removes the sandbox in under a second. Under a CPU-heavy tenant, protected nodes stopped containers in about 2.3 s where unprotected ones took 10 to 92 s.</p>
+</div>
+<p class="lesson">Separate the pod's own shutdown from the runtime's cleanup. A plateau at 30 s is a pod using its whole grace period; a stop that keeps growing with disk busy time is the node.<small>Reserved CPUs do not finish disk I/O. A process can own its CPU and still sleep in the kernel.</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Section 1 for the outcome, Section 3 · Disk tab for the cause</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Container stop time, slowest nodes</span><span class="pw">section 1</span></div><svg data-chart="stop"></svg><p class="pr"><b>Read it:</b> mean stop time per node. Lines resting at 30 s are pods taking their default grace period, not the node (confirm in the pod's spec before dismissing). Lines past the dashed 35 s mark (just past the default grace period) point at teardown; that is also where the <b>Containers slow to stop</b> risk tile turns yellow. Up to about 18 s is healthy at 4,000 nodes.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Whole node stalled on disk · Root volume busy</span><span class="pw">Disk</span></div><svg data-chart="diskpair"></svg><p class="pr"><b>Read it:</b> a busy device alone (grey) says work is in progress. Full I/O stall (red) rising with it, in the same minutes as long stops, makes storage the owner; over 5% for 10 minutes it is the <b>Node stalled on disk</b> risk tile. <b>Root volume queue</b> beside them says whether the volume's IOPS is the limit.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Stuck tasks</span><span class="pw">Disk</span></div><svg data-chart="hung"></svg><p class="pr"><b>Read it:</b> the kernel found a task stuck in uninterruptible sleep past its timeout (120 s by default). One task stuck for 10 minutes counts several times, so read detections, not tasks (the <b>Stuck tasks</b> tile counts nodes; the table counts detections). The journal names the task only for the first 10 after boot.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: volatile overlays, the Disk tab's other panels and the journal</summary><div class="body">
+<p><b>Writable layers are mounted volatile</b> on protected nodes, so stopping a container no longer waits for a sync of the whole filesystem. A saturated root volume can still slow everything that touches it: image pulls, container starts, and the unmount itself.</p>
+<p><b>Also on the Disk tab:</b> <b>Teardown calls, 9 in 10 under</b> (stop and remove, 90th percentile; stops that grow with disk busy time are teardown waiting on the disk) and <b>Root filesystem used</b> (full disks fail pulls and starts; the kubelet evicts pods near the end).</p>
+<p><b>The strongest proof lives in the journal.</b> The runtime's own deadline errors at teardown are log lines, not metrics. The source guide's chapter 11 gives a Logs Insights query: three or more distinct containers on one node in five minutes, sustained into the next window. Run it for the node and window you found on the dashboard.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="network">
+<div class="chapter-head"><span class="kicker" style="color:var(--info)">06 · Three network jobs</span><h2>Three different jobs hide behind "the network is slow".</h2><p class="intro">A pod that cannot get an address, a Service whose route is not programmed yet, and a packet dropped after it reached the node are three failures with three owners. Only one of them has anything to do with CPU.</p></div>
+<div class="scene">
+<span class="label">Scene · pick the job · follow it to the step that can fail</span>
+<div class="controls" style="margin-top:12px" id="net-controls"><button type="button" data-net="address" aria-pressed="true">Give the pod an address</button><button type="button" data-net="map" aria-pressed="false">Program the Service map</button><button type="button" data-net="packet" aria-pressed="false">Receive a packet</button></div>
+<svg id="net-scene" viewBox="0 0 1000 240" role="img" aria-label="A chain of steps for one network job, with the failing step marked"></svg>
+<div class="readouts">
+<div class="readout"><small>Owner</small><b id="ro-net-owner" style="--v:var(--agents);font-size:22px">aws-node</b><span id="ro-net-owner-s">the IP address manager</span></div>
+<div class="readout"><small>Do reserved CPUs help?</small><b id="ro-net-cpu" style="--v:var(--bad);font-size:22px">No</b><span id="ro-net-cpu-s">a prompt process can still have no address</span></div>
+<div class="readout"><small>Where it shows</small><b id="ro-net-where" style="--v:var(--ink);font-size:18px">Runtime refused work: sandbox calls only</b><span id="ro-net-where-s">then Network path tab</span></div>
+</div>
+<p class="caption" id="net-caption">The kubelet asks containerd for a sandbox; containerd asks the CNI; aws-node must hand over a free address from the pool it has attached. When the pool is empty, run_podsandbox fails on a node that is otherwise perfectly prompt.</p>
+</div>
+<p class="lesson">Name the failed network job before touching a network setting.<small>Reserved CPUs cannot mint addresses, apply Service changes faster than they arrive, or raise an instance's packet allowance.</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Section 3 · Network path tab, one panel per job</span></div>
+<div class="dash-grid">
+<div class="pcard"><div class="ph"><span class="pt">Sandboxes refused: no address free</span><span class="pw">Network path</span></div><svg data-chart="cni"></svg><p class="pr"><b>Read it:</b> times aws-node had no address for a new sandbox, per node. Capacity, not CPU. <b>Free pod addresses, lowest nodes</b> beside it shows the pool draining before this fires.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Service map behind its changes</span><span class="pw">Network path</span></div><svg data-chart="svcmap"></svg><p class="pr"><b>Read it:</b> seconds a node's Service routes have been behind, shown only while changes are pending. Over 90 s for 5 minutes, traffic to new or moved Services may fail on that node. A quiet node rewrites its map only hourly, so the bare age is not shown.</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Receive backlog drops and squeezes · Instance network allowances exceeded</span><span class="pw">Network path</span></div><svg data-chart="drops"></svg><p class="pr"><b>Read it:</b> red is a CPU's receive backlog overflowing (the one network job where CPU placement matters: spreading receive work can help). Bars are the instance's own limits: packet rate, bandwidth, connections, link-local. No CPU setting fixes those.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: receive steering, and what host drop counters cannot see</summary><div class="body">
+<p><b>Receive Packet Steering (RPS)</b> spreads receive processing across CPUs. The validated profile points it at the workload CPUs so the lane stays quiet, and keeps <b>Receive Flow Steering</b> off (it was counterproductive under saturated backlogs). Turn RPS on only with measured drops that line up with one hot CPU, and only if the instance allowances stay quiet. Spreading cost 20 to 40% more receive CPU at moderate rates.</p>
+<p><b>Zero host drops does not clear the application.</b> The UDP buffer counter sees only host-network sockets. A pod's own socket drops happen inside its namespace, and the lab does not keep cAdvisor's pod-interface counter. The last hop needs application evidence.</p>
+<p><b>Also on the tab:</b> <b>Service changes waiting to be applied</b> (pending work should drain; full update time stays bounded in nftables mode) and <b>CPU spent receiving packets</b> (compare with peers, and before and after any steering change).</p>
+</div></details>
+</section>
+
+<section class="chapter" id="evidence">
+<div class="chapter-head"><span class="kicker" style="color:var(--grey)">07 · Trust the evidence</span><h2>A frozen node stops telling you it is frozen.</h2><p class="intro">Most of this dashboard is the node describing itself. The moment it matters most, that description can stop. The dashboard reads the node from two sides so you can tell a quiet node from a silent one.</p></div>
+<div class="scene">
+<span class="label">Scene · one node over forty minutes · inside view and outside view</span>
+<svg id="freeze-scene" viewBox="0 0 1000 260" role="img" aria-label="Two timelines: the node's own metrics go blank while the heartbeat age seen from the API server climbs"></svg>
+<p class="caption">Top: the node's own metrics (scraped from the kubelet, cAdvisor and node-exporter). Bottom: its lease, renewed every 10 s and read from the API server. When the node freezes in memory reclaim, the top goes blank and the bottom climbs. Blank and zero look alike on a chart; they mean opposite things.</p>
+</div>
+<div class="three">
+<div class="mini"><h3>"–" · no reading</h3><p>The node had not settled long enough for that check, or there was nothing to measure: no sandbox was created, no pod started. Nothing happened.</p></div>
+<div class="mini"><h3>"no data" · no observation</h3><p>The source sent nothing. Every tile reads grey "no data", never 0, when its own source was silent. Grey is unknown, not healthy.</p></div>
+<div class="mini"><h3>"not exported" · not measured here</h3><p>The metric exists in the design but not in this cluster (the contract check writes to the journal). Protection is unverified by metrics, not passing.</p></div>
+</div>
+<p class="lesson">Read from both sides: the node's own metrics, and the API server's view of its heartbeat. On this dashboard grey always means unknown.<small>Two tiles exist only for this: <b>Kubelet went silent</b> (inside view gone, in the Harm row) and <b>Nodes with missing telemetry</b> (a source never answered in the range, in the At risk row).</small></p>
+<div class="dash"><div class="dash-head"><h3>On the dashboard</h3><span>Two tiles, section 1, and the Configuration tab's coverage table</span></div>
+<div class="dash-grid">
+<div class="pcard stat"><div class="ph"><span class="pt">Kubelet went silent · Nodes with missing telemetry</span><span class="pw">tiles</span></div><div class="tiles" style="grid-template-columns:1fr 1fr"><div class="tile" style="--c:var(--orange)"><small>Kubelet went silent</small><b>2</b></div><div class="tile" style="--c:var(--warn)"><small>Nodes with missing telemetry</small><b>1</b></div></div><p class="pr"><b>Read it:</b> nodes whose kubelet's endpoint (metrics, logs, exec) answered no scrape for 2 minutes while still listed and not being removed; and nodes a source never answered from. Both are the dashboard's additions. The heartbeat tells the two cases apart: silent and not checking in is a frozen node; silent but still checking in is a hung endpoint.</p><span class="ill">illustrative</span></div>
+<div class="pcard"><div class="ph"><span class="pt">Kubelets not answering</span><span class="pw">section 1</span></div><svg data-chart="silent"></svg><p class="pr"><b>Read it:</b> line it up with heartbeat age and stuck tasks in the same minutes. Then check the Memory floor tab: did code read back from disk rise just before the silence?</p><span class="ill">illustrative</span></div>
+<div class="pcard wide"><div class="ph"><span class="pt">Nodes missing a metric source</span><span class="pw">Configuration</span></div><svg data-chart="covtable"></svg><p class="pr"><b>Read it:</b> one row per node and source that went missing. Until that source answers, the node's blank panels mean unknown. Check the source's pod on the node before trusting anything else about it.</p><span class="ill">illustrative</span></div>
+</div></div>
+<details><summary>Go deeper: sampling, thresholds, and what the lines are not</summary><div class="body">
+<p><b>Sampling.</b> Heartbeat age is read every 30 s, so a reading can fall up to 30 s short of a real gap: the 60 s line reliably catches gaps of about 90 s and longer. Counters are read step by step so a jump after a scrape gap of up to an hour still counts once; treat totals as estimates, not audits.</p>
+<p><b>Worst-node lines</b> can switch nodes at every timestamp, and a node leaving a top-8 list has not necessarily recovered. Before asserting that two things lined up on one node, select that node so every panel shows only it.</p>
+<p><b>Thresholds are starting points</b> from 32-vCPU nodes at 170 pods. The source guide's lines are 2% CPU waiting and 5% full stall held 10 minutes, 60 s pod-state age, 30 s heartbeat, 90 s Service map, a 5 s pod-start objective, and a page on runtime errors in two 5-minute windows or on several nodes. Every other line (15/30 s pod start, 35 s stop, 60 s heartbeat, 80% lane, 100/800 pages a second, and orange at one or two nodes, red from three on the harm tiles) is the dashboard's, set from the lab's runs. A panel's tooltip says which it uses.</p>
+</div></details>
+</section>
+
+<section class="chapter" id="walk">
+<div class="chapter-head"><span class="kicker" style="color:var(--ok)">08 · Walk the dashboard</span><h2>Now the dashboard reads as a sequence of questions.</h2><p class="intro">Every chapter added one layer. The dashboard is laid out in the same order: is any node being harmed, did an operation fail, whose software waited, which boundary owned it. Pick an incident and watch the path light up.</p></div>
+<div class="scene">
+<span class="label">Scene · the dashboard's shape · pick what went wrong</span>
+<div class="controls" style="margin-top:12px" id="case-controls"><button type="button" data-case="cpu" aria-pressed="true">CPU-heavy tenant</button><button type="button" data-case="mem" aria-pressed="false">Memory reclaim</button><button type="button" data-case="addr" aria-pressed="false">No free address</button><button type="button" data-case="disk" aria-pressed="false">Disk at teardown</button><button type="button" data-case="fine" aria-pressed="false">Busy fleet, nothing wrong</button></div>
+<div class="map">
+<svg id="dash-map" viewBox="0 0 640 580" role="img" aria-label="A schematic of the dashboard: three rows of tiles, the timeline, the table, section 1, section 2 and the six tabs of section 3, with the relevant parts highlighted"></svg>
+<div class="walk" id="walk-steps">
+<div data-k="1"><span class="n">1</span><span><b id="w1t">Is any node being harmed?</b><span id="w1s">Which tile is red or orange, when did it start, and which node tops the table?</span></span></div>
+<div data-k="2"><span class="n">2</span><span><b id="w2t">1 · Did a node operation fail?</b><span id="w2s">Confirm the operation and the minutes it failed in.</span></span></div>
+<div data-k="3"><span class="n">3</span><span><b id="w3t">2 · Why: was the node's own software waiting?</b><span id="w3s">Whose work waited in those same minutes?</span></span></div>
+<div data-k="4"><span class="n">4</span><span><b id="w4t">3 · Deep dive by boundary</b><span id="w4s">Open the tab that owns it.</span></span></div>
+<div data-k="5"><span class="n">5</span><span><b id="w5t">Leave with</b><span id="w5s">a node, a window, the failed operation and its owner.</span></span></div>
+</div></div>
+<p class="caption" id="case-caption">A CPU-heavy tenant fills the pods' 28 vCPUs. On a protected node the kubelet and containerd keep their turn on the lane; the only sign is a little containerd waiting and nothing in the Harm row. On an unprotected node runtime calls fail, stop times stretch, and section 2 shows the kubelet waiting in the same minutes.</p>
+</div>
+<div class="two">
+<div class="mini"><h3>Use the filters to compare like with like</h3><p>Node pool, Node class and Processor narrow the fleet. Node focuses every panel on one machine; so does clicking a name in the table. Sections 2 and 3 open on a click; the Explanations switch shows a plain-words introduction above each section, and <b>Where to look next</b> beside the timeline names the section for each tile.</p></div>
+<div class="mini"><h3>Do not page on CPU</h3><p>Busy pods are allowed by design. Page when a node operation fails or protection is missing (the Harm row of tiles, and the Configuration tab). Everything below the tiles explains; it does not alarm.</p></div>
+</div>
+<p class="lesson">Leave with one node, one five-minute window, the operation that failed, and the boundary that owned it.<small>"CPU was high" is not a diagnosis. "run_podsandbox failed on ip-10-0-41-7 from 14:02 to 14:07 while aws-node had no free address" is.</small></p>
+</section>
+
+<section class="chapter" id="reference">
+<div class="chapter-head"><span class="kicker" style="color:var(--dim)">Reference · when you need a name</span><h2>Tiles and panels, by section.</h2><p class="intro">The journey above is the learning path. This is the lookup, kept short: what each tile counts and how it colours, then every panel title in dashboard order. Hover the ⓘ on the dashboard itself for the full text.</p></div>
+<h3 style="margin-bottom:10px">Is any node being harmed? · the tiles</h3>
+<p class="caption" style="margin:0 0 10px">Harm and risk tiles count nodes: grey "no data", green 0; harm turns orange at 1 or 2 nodes and red from 3, risk turns yellow from 1. Expected tiles are blue-grey counters, never a verdict.</p>
+<div class="gloss">
+<div><b><i style="--c:var(--bad)"></i>Runtime refused work</b>Nodes whose kubelet→runtime calls failed after their first 5 minutes, in two 5-minute windows or on 3+ nodes at once (the guide's paging rule).</div>
+<div><b><i style="--c:var(--bad)"></i>Node software restarted</b>Nodes where the kubelet or containerd restarted after the first 5 minutes: crashed or killed for memory. The journal says which.</div>
+<div><b><i style="--c:var(--bad)"></i>Kubelet lost track of its pods</b>Nodes whose PLEG gap passed 60 s for 5 minutes: its view of its containers was stale.</div>
+<div><b><i style="--c:var(--bad)"></i>Node stopped checking in</b>Nodes over 60 s without a lease renewal, seen from the API server; nodes being removed left out. Healthy stays under about 15 s.</div>
+<div><b><i style="--c:var(--bad)"></i>Kubelet went silent</b>Nodes whose kubelet endpoint answered no scrape for 2 minutes while listed and not being removed. Still checking in: hung endpoint; not checking in: frozen.</div>
+<div><b><i style="--c:var(--bad)"></i>Node stalled on memory</b>Nodes where every task waited on memory over 5% of the time for 10 minutes, nodes up 25+ minutes. The guide's harm; low free memory is not.</div>
+<div><b><i style="--c:var(--bad)"></i>Pods slow to start</b>Worst 5-minute p99 of the node's share of pod start, nodes up 15+ minutes. Yellow 15 s, red 30 s; reads "60 s or more" at its cap.</div>
+<div><b><i style="--c:var(--bad)"></i>CPU split misconfigured</b>Nodes where reserved-by-accounting and reserved-by-placement differ. Replace the node.</div>
+<div><b><i style="--c:var(--warn)"></i>Runtime errors, isolated</b>Nodes with a runtime error after their first 5 minutes that did not repeat or spread. 0 or 1 is healthy; repeating becomes harm.</div>
+<div><b><i style="--c:var(--warn)"></i>Heartbeat late</b>Nodes 30 to 60 s without a lease renewal (the guide's 30 s line). In the memory tests such gaps came with memory stall.</div>
+<div><b><i style="--c:var(--warn)"></i>Node software starved of CPU</b>Nodes where kubelet or containerd CPU-waited over 2% for 10 minutes, nodes up 25+ minutes. What the reserved CPUs remove.</div>
+<div><b><i style="--c:var(--warn)"></i>Node software stalled on memory</b>Nodes where every task of the kubelet or containerd waited on memory over 5% for 10 minutes.</div>
+<div><b><i style="--c:var(--warn)"></i>Node stalled on disk</b>Nodes where every task waited on disk over 5% for 10 minutes, nodes up 25+ minutes.</div>
+<div><b><i style="--c:var(--warn)"></i>Stuck tasks</b>Nodes where the kernel found tasks stuck in uninterruptible sleep past its timeout. The table counts detections.</div>
+<div><b><i style="--c:var(--warn)"></i>Containers slow to stop</b>Worst 5-minute mean stop time, grace periods included. Yellow from 35 s.</div>
+<div><b><i style="--c:var(--warn)"></i>Nodes with missing telemetry</b>Nodes listed 10+ minutes from which node-exporter or cAdvisor never answered in the range. Unknown, not healthy.</div>
+<div><b><i style="--c:var(--expected)"></i>Errors while nodes boot</b>Runtime calls that failed in a node's first 5 minutes, summed. Any number during a scale-up.</div>
+<div><b><i style="--c:var(--expected)"></i>Out-of-memory kills, all</b>Every OOM kill on the selected nodes, summed. Harm only with a restart of node software or heartbeats stopping.</div>
+<div><b><i style="--c:var(--info)"></i>Nodes in view</b>Most nodes at once matching the filters, 30-minute lookback. Blue: context.</div>
+</div>
+<details><summary>Every panel, in dashboard order</summary><div class="body pindex">
+<h4>Is any node being harmed?</h4><ul><li>The three tile rows above</li><li><b>When did it start?</b> state timeline, one row per tile question, harm first</li><li><b>Where to look next</b> (text): the first row that changed names the section to open</li><li><b>Which nodes need attention?</b> one row per node that crossed a harm or risk line, harm first; click a name to focus</li></ul>
+<h4>1 · Did a node operation fail?</h4><ul><li><b>Runtime refused work, by kind of call</b></li><li><b>Pod start: the node's share and end to end</b></li><li><b>Kubelet's pod-state check age, oldest nodes</b></li><li><b>Heartbeat age, oldest nodes</b></li><li><b>Kubelets not answering</b></li><li><b>Node software restarted</b></li><li><b>Container stop time, slowest nodes</b></li></ul>
+<h4>2 · Why: was the node's own software waiting?</h4><ul><li><b>Node software waiting for CPU</b></li><li><b>Node agents waiting for CPU, top 8</b></li><li><b>Node software stalled on memory</b></li><li><b>Whole-node run queue wait per CPU</b></li><li><b>Node CPU use (context)</b></li><li><b>Busiest pods on this node</b> (one node selected)</li></ul>
+<h4>3 · CPU lane</h4><ul><li><b>4 vCPUs reserved</b> · <b>Static CPU manager</b> · <b>Pinning errors</b></li><li><b>How the protected nodes split their CPUs</b></li><li><b>Reserved CPUs: how busy</b></li><li><b>Node agents throttled by their CPU limit</b></li></ul>
+<h4>3 · Memory floor</h4><ul><li><b>Node software's code read back from disk</b></li><li><b>Node software's memory in use, largest node</b></li><li><b>Whole node stalled on memory</b></li><li><b>Node-wide reclaim</b></li><li><b>Out-of-memory kills and memory pressure</b></li><li><b>Memory available, lowest nodes</b></li></ul>
+<h4>3 · Disk</h4><ul><li><b>Whole node stalled on disk</b></li><li><b>Root volume busy</b></li><li><b>Root volume queue</b></li><li><b>Teardown calls, 9 in 10 under</b></li><li><b>Root filesystem used</b></li><li><b>Stuck tasks</b></li></ul>
+<h4>3 · Network path</h4><ul><li><b>Service map behind its changes</b></li><li><b>Service changes waiting to be applied</b></li><li><b>Receive backlog drops and squeezes</b></li><li><b>Instance network allowances exceeded</b></li><li><b>CPU spent receiving packets</b></li><li><b>Sandboxes refused: no address free</b></li><li><b>Free pod addresses, lowest nodes</b></li></ul>
+<h4>3 · Configuration</h4><ul><li><b>What the nodes are running</b></li><li><b>Nodes missing a metric source</b></li><li><b>Host services failed or restarted</b></li><li><b>Nodes not Ready</b></li><li><b>Failed contract checks</b> ("not exported" in the lab)</li></ul>
+<h4>3 · Engineer's detail</h4><ul><li><b>Runtime call time, mean, by kind</b> (log scale)</li><li><b>Pod-state check duration, slowest nodes</b></li><li><b>Pod start time, all pods</b> (heatmap)</li><li>No harm lines of their own; read after section 1 has named a node and a time</li></ul>
+<h4>How to read this dashboard</h4><ul><li>A collapsed glossary and the source guide's thresholds, with the author's attribution</li></ul>
+</div></details>
+</section>
+
+<footer><strong>Can the node still run its pods? · A visual journey</strong>Prepared by Shane Corbett · Kubernetes Specialist · <a href="mailto:shancor@amazon.com">shancor@amazon.com</a><br>Please retain author attribution when sharing or adapting this guide or the dashboard it accompanies.<br>First edition · 29 October 2026 · Revised 30 October 2026 for the refactored dashboard (harm, risk and expected tile rows, timeline, Engineer's detail tab) · Charts are illustrative shapes unless a caption cites a lab value. Companion to the dashboard <i>Node protection: can the node still run its pods?</i> and the engineering narrative <i>A private lane for the node</i>.</footer>
+</main></div>
+<script>
+(function(){
+"use strict";
+const C={pods:'#5B9BF8',kubelet:'#F5B83D',containerd:'#E07B24',agents:'#A78BFA',ok:'#3FB950',warn:'#FADE2A',bad:'#F2495C',info:'#8AB8FF',grey:'#5B6B85',expected:'#6C7A93',orange:'#FF9830',ink:'#e8eef4',muted:'#9fb0c0',dim:'#6f8396',line:'#2a3948',card:'#0a1016'};
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+let seed=7;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+function series(n,base,noise){const a=[];for(let i=0;i<n;i++)a.push(Math.max(0,base+(rnd()-.5)*2*noise));return a;}
+function bump(a,i0,i1,peak,shape){for(let i=i0;i<=i1&&i<a.length;i++){const t=(i-i0)/Math.max(1,i1-i0);const f=shape==='flat'?1:Math.sin(Math.PI*t);a[i]+=peak*f;}return a;}
+function fmt(v,u){if(u==='%')return Math.round(v)+'%';if(u==='s')return (v>=10?Math.round(v):v.toFixed(1))+' s';if(u==='MiB')return v>=1024?(v/1024).toFixed(1)+' GiB':Math.round(v)+' MiB';if(u==='/s')return Math.round(v)+'/s';return Math.round(v);}
+
+/* ---------- generic chart ---------- */
+function chart(svg,s){
+  clear(svg);const W=s.w||600,H=s.h||240,L=s.padL||48,R=12,T=14,B=48;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);
+  const pw=W-L-R,ph=H-T-B;const ymin=s.ymin||0;
+  let ymax=s.ymax;if(ymax==null){ymax=0;const stacks=[];s.series.forEach(se=>se.data.forEach((v,i)=>{if(v==null)return;if(se.bars&&s.stack){stacks[i]=(stacks[i]||0)+v;ymax=Math.max(ymax,stacks[i]);}else ymax=Math.max(ymax,v);}));(s.thresholds||[]).forEach(t=>ymax=Math.max(ymax,t.y*1.1));ymax*=1.12;if(s.unit==='')ymax=Math.ceil(ymax/4)*4;}
+  const Y=v=>T+ph-(v-ymin)/(ymax-ymin)*ph;const n=Math.max(...s.series.map(se=>se.data.length));const X=i=>L+i/(n-1)*pw;
+  for(let g=0;g<=4;g++){const v=ymin+(ymax-ymin)*g/4;el('line',{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:C.line,'stroke-width':1},svg);el('text',{x:L-6,y:Y(v)+4,'text-anchor':'end',fill:C.dim,'font-size':11},svg,fmt(v,s.unit));}
+  (s.xl||['6 h ago','3 h ago','now']).forEach((t,i,a)=>el('text',{x:L+i/(a.length-1)*pw,y:H-B+16,'text-anchor':i===0?'start':i===a.length-1?'end':'middle',fill:C.dim,'font-size':11},svg,t));
+  const stackBase=new Array(n).fill(0);const bw=pw/n*0.72;
+  s.series.filter(se=>se.bars).forEach(se=>{se.data.forEach((v,i)=>{if(!v)return;const b=s.stack?stackBase[i]:0;const y1=Y(b+v),y0=Y(b);el('rect',{x:X(i)-bw/2,y:y1,width:bw,height:Math.max(1,y0-y1),fill:se.color,opacity:.85},svg);if(s.stack)stackBase[i]+=v;});});
+  s.series.filter(se=>!se.bars).forEach(se=>{let d='',area='';let started=false,segStart=null;const pts=se.data;
+    pts.forEach((v,i)=>{if(v==null){if(started){d+='';}started=false;return;}const x=X(i),y=Y(Math.min(v,ymax));if(!started){d+=`M${x} ${y}`;started=true;segStart=i;}else d+=` L${x} ${y}`;});
+    if(se.fill){let fa='';let on=false,first=null,last=null;pts.forEach((v,i)=>{if(v==null){if(on){fa+=` L${X(last)} ${Y(ymin)} Z`;on=false;}return;}if(!on){fa+=`M${X(i)} ${Y(ymin)} L${X(i)} ${Y(Math.min(v,ymax))}`;on=true;}else fa+=` L${X(i)} ${Y(Math.min(v,ymax))}`;last=i;});if(on)fa+=` L${X(last)} ${Y(ymin)} Z`;el('path',{d:fa,fill:se.color,opacity:.12},svg);}
+    el('path',{d,fill:'none',stroke:se.color,'stroke-width':se.width||2,'stroke-dasharray':se.dash?'6 4':'none','stroke-linejoin':'round','stroke-linecap':'round'},svg);});
+  (s.gaps||[]).forEach(g=>{el('rect',{x:X(g[0]),y:T,width:X(g[1])-X(g[0]),height:ph,fill:'url(#hatch)',opacity:.7},svg);});
+  (s.thresholds||[]).forEach(t=>{el('line',{x1:L,x2:W-R,y1:Y(t.y),y2:Y(t.y),stroke:t.color,'stroke-width':1.5,'stroke-dasharray':'5 4',opacity:.9},svg);if(t.label)el('text',{x:W-R-4,y:Y(t.y)-4,'text-anchor':'end',fill:t.color,'font-size':11.5},svg,t.label);});
+  (s.annots||[]).forEach(a=>{const x=X(a.i),y=Y(Math.min(a.y,ymax));const dx=a.dx==null?40:a.dx,dy=a.dy==null?-30:a.dy;el('circle',{cx:x,cy:y,r:4,fill:'none',stroke:C.warn,'stroke-width':2},svg);el('line',{x1:x,y1:y,x2:x+dx*0.85,y2:y+dy*0.85,stroke:C.warn,'stroke-width':1.2},svg);const lines=a.text.split('\n');const tw=Math.max(...lines.map(l=>l.length))*6.1+14;let tx=x+dx,ty=y+dy;if(tx+tw>W-R)tx=W-R-tw;if(tx<L)tx=L;if(ty-12<T)ty=T+12;if(ty+lines.length*15>H-B)ty=H-B-lines.length*15;el('rect',{x:tx-6,y:ty-13,width:tw,height:lines.length*15+8,rx:4,fill:'#0a1016',stroke:C.warn,'stroke-width':1},svg);lines.forEach((l,k)=>el('text',{x:tx,y:ty+k*15,fill:C.ink,'font-size':12},svg,l));});
+  if(s.legend!==false){let lx=L,ly=H-16;s.series.forEach(se=>{if(se.hideLegend)return;const w=se.name.length*6+24;if(lx+w>W-R){lx=L;ly+=13;}el('rect',{x:lx,y:ly-4,width:12,height:se.dash?2:4,fill:se.color},svg);el('text',{x:lx+16,y:ly+1,fill:C.muted,'font-size':11},svg,se.name);lx+=w;});}
+}
+function hbars(svg,rows,maxv,unit,W=600){clear(svg);const H=160;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);rows.forEach((r,i)=>{const y=22+i*42;el('text',{x:14,y:y+18,fill:C.muted,'font-size':12.5},svg,r.name);el('rect',{x:190,y:y,width:380,height:26,rx:5,fill:'#1a2430'},svg);el('rect',{x:190,y:y,width:380*r.v/maxv,height:26,rx:5,fill:r.color},svg);el('text',{x:190+380*r.v/maxv+8,y:y+18,fill:C.ink,'font-size':13,'font-weight':600},svg,r.v+(unit||''));});}
+function table(svg,head,rows,W=600){clear(svg);const H=170;svg.setAttribute('viewBox',`0 0 ${W} ${H}`);el('rect',{x:0,y:0,width:W,height:H,rx:6,fill:C.card},svg);const cols=W>700?[14,W*0.4,W*0.7]:[14,290,470];head.forEach((h,i)=>el('text',{x:cols[i],y:24,fill:C.dim,'font-size':11.5,'font-weight':600},svg,h));el('line',{x1:10,x2:W-10,y1:34,y2:34,stroke:C.line},svg);rows.forEach((r,ri)=>{const y=56+ri*28;r.forEach((c,i)=>el('text',{x:cols[i],y,fill:i===2?C.warn:C.ink,'font-size':12.5,'font-family':i===0?'ui-monospace,Menlo,monospace':'inherit'},svg,c));});}
+
+/* ---------- chart specs ---------- */
+const N=36;
+const specs={
+ cri(){const grey=new Array(N).fill(0);bump(grey,4,14,40);const sand=new Array(N).fill(0);sand[22]=3;sand[23]=5;sand[24]=4;sand[25]=2;return{unit:'',stack:true,series:[{name:'expected: any call in a node\'s first 5 minutes',color:C.expected,bars:true,data:grey.map(Math.round)},{name:'run_podsandbox',color:C.bad,bars:true,data:sand},{name:'create_container',color:'#FF9830',bars:true,data:new Array(N).fill(0)}],annots:[{i:9,y:38,text:'scale-up: new nodes, expected',dx:60,dy:-10},{i:23,y:5,text:'after settling: harm,\nsandbox calls only → networking',dx:-150,dy:-50}]};},
+ lease(){const a=series(N,14,4),b=series(N,16,5),c=series(N,13,3);bump(c,20,26,110);return{unit:'s',ymax:120,series:[{name:'ip-10-0-41-7',color:C.bad,data:c},{name:'ip-10-0-12-9',color:C.muted,data:a},{name:'ip-10-0-77-2',color:C.dim,data:b}],thresholds:[{y:30,color:C.warn,label:'30 s (guide: risk)'},{y:60,color:C.bad,label:'60 s (dashboard: harm)'}],annots:[{i:23,y:118,text:'froze or lost its network;\nread with memory stall',dx:-200,dy:20}]};},
+ start(){const med=series(N,3,.6),p99=series(N,7,1.5),e2e=series(N,10,2);bump(e2e,5,17,70,'flat');return{unit:'s',ymax:90,series:[{name:'settled nodes, mean',color:'#73BF69',data:med},{name:'settled nodes, 99th percentile',color:'#FF9830',data:p99},{name:'end to end, 99th percentile',color:'#8E8E8E',dash:true,data:e2e}],thresholds:[{y:15,color:C.warn,label:'15 s'},{y:30,color:C.bad,label:'30 s'}],annots:[{i:11,y:80,text:'scale-up: waiting for new nodes.\nCapacity, not the node',dx:60,dy:-10},{i:28,y:8,text:'the node\'s share stays low',dx:-180,dy:-40}]};},
+ whost(){const kw=series(N,.6,.3),cw=series(N,1,.4),km=series(N,.35,.1),cm=series(N,.7,.15);bump(cw,18,27,4.5);bump(kw,19,26,1.6);return{unit:'%',ymax:8,series:[{name:'kubelet, worst node',color:C.kubelet,data:kw},{name:'containerd, worst node',color:C.containerd,data:cw},{name:'kubelet, median',color:C.kubelet,dash:true,data:km},{name:'containerd, median',color:C.containerd,dash:true,data:cm}],thresholds:[{y:2,color:C.warn,label:'2% held 10 min'}],annots:[{i:22,y:5.5,text:'over the line: the lane lost promptness.\nCause only if section 1 failed now',dx:40,dy:-15}]};},
+ wagents(){const a=series(N,.5,.3),b=series(N,.8,.3),c=series(N,.4,.2),d=series(N,.6,.3);bump(b,14,30,5.5,'flat');return{unit:'%',ymax:8,series:[{name:'aws-node · ip-10-0-41-7',color:'#A78BFA',data:b},{name:'kube-proxy · ip-10-0-41-7',color:'#C4B5FD',data:a},{name:'node-local-dns · ip-10-0-12-9',color:'#8B6CF6',data:c},{name:'fluent-bit · ip-10-0-77-2',color:'#6D4FD6',data:d}],thresholds:[{y:2,color:C.warn,label:'2%'}],annots:[{i:22,y:6.3,text:'one agent waiting for an hour:\noff the lane, or the lane is full',dx:40,dy:-12}]};},
+ wutil(){const b=series(N,88,6),m=series(N,70,5);return{unit:'%',ymin:0,ymax:100,series:[{name:'busiest node',color:C.pods,fill:true,data:b.map(v=>Math.min(100,v))},{name:'median node',color:'#7B8394',data:m}],annots:[{i:16,y:92,text:'allowed: the pods may fill their CPUs.\nNever page on this',dx:40,dy:-40}]};},
+ lanebusy(){const b=series(N,20,6),m=series(N,8,2);bump(b,10,12,35);bump(b,24,26,30);return{unit:'%',ymin:0,ymax:100,series:[{name:'busiest node',color:C.kubelet,fill:true,data:b},{name:'median node',color:'#B8B8B8',data:m}],thresholds:[{y:80,color:C.warn,label:'80%'}],annots:[{i:11,y:55,text:'bursts when many pods start\nor stop together: the lane absorbs them',dx:40,dy:-20}]};},
+ throttle(){const a=series(N,27,2),b=series(N,4,2),c=series(N,2,1);return{unit:'%',ymax:40,series:[{name:'node-forensics · ip-10-0-41-7',color:'#A78BFA',data:a},{name:'fluent-bit · ip-10-0-12-9',color:'#C4B5FD',data:b},{name:'aws-node · ip-10-0-77-2',color:'#6D4FD6',data:c}],thresholds:[{y:25,color:C.warn,label:'25%'}],annots:[{i:18,y:27,text:'steady: its own CPU limit,\nnot the lane. Raise the limit',dx:40,dy:-45}]};},
+ majflt(){const k=series(N,4,3),c=series(N,3,2);bump(k,3,5,380);bump(c,3,5,250);bump(k,20,30,1400,'flat');bump(c,20,30,900,'flat');return{unit:'/s',ymax:1800,series:[{name:'kubelet, worst node',color:C.kubelet,data:k},{name:'containerd, worst node',color:C.containerd,data:c}],thresholds:[{y:100,color:C.warn,label:'100/s'},{y:800,color:C.bad,label:'800/s'}],annots:[{i:4,y:390,text:'one burst as load arrives: normal',dx:40,dy:-20},{i:25,y:1420,text:'steady during pressure:\nthe floor is missing or too small',dx:-250,dy:40}]};},
+ ws(){const k=series(N,600,20),c=series(N,3200,60);for(let i=0;i<N;i++)c[i]+=i*18;return{unit:'MiB',ymin:0,ymax:4400,series:[{name:'kubelet',color:C.kubelet,data:k},{name:'containerd',color:C.containerd,data:c}],thresholds:[{y:775,color:C.kubelet,label:'kubelet floor 775 MiB'},{y:3774,color:C.containerd,label:'containerd floor 3,774 MiB'}],annots:[{i:30,y:3800,text:'use may cross the floor:\nit caps nothing',dx:-220,dy:30}]};},
+ memstall(){const a=series(N,.5,.4),b=series(N,.8,.5),c=series(N,.4,.3);bump(a,16,30,14,'flat');for(let i=21;i<=24;i++)a[i]=null;return{unit:'%',ymax:25,series:[{name:'ip-10-0-41-7',color:C.bad,data:a},{name:'ip-10-0-12-9',color:C.muted,data:b},{name:'ip-10-0-77-2',color:C.dim,data:c}],gaps:[[21,24]],thresholds:[{y:5,color:C.warn,label:'5%'},{y:20,color:C.bad,label:'20%'}],annots:[{i:22.5,y:22,text:'scrape gap while it stalled:\nthe worst is hidden here',dx:40,dy:-8}]};},
+ stop(){const a=series(N,2.5,.8),b=series(N,3,1),g=series(N,30,.3),t=series(N,4,1);bump(t,14,30,62,'flat');return{unit:'s',ymax:80,series:[{name:'ip-10-0-41-7',color:C.bad,data:t},{name:'ip-10-0-55-3',color:'#B877D9',data:g},{name:'ip-10-0-12-9',color:C.muted,data:a},{name:'ip-10-0-77-2',color:C.dim,data:b}],thresholds:[{y:35,color:C.warn,label:'35 s'}],annots:[{i:8,y:30,text:'plateau at 30 s: a pod using\nits grace period, not the node',dx:30,dy:-45},{i:22,y:66,text:'teardown waiting:\nopen the Disk tab',dx:-170,dy:-30}]};},
+ diskpair(){const busy=series(N,20,8),stall=series(N,.5,.5);bump(busy,14,30,78,'flat');bump(stall,15,29,16,'flat');return{unit:'%',ymin:0,ymax:100,series:[{name:'root volume busy (worst node)',color:'#8E8E8E',fill:true,data:busy.map(v=>Math.min(100,v))},{name:'whole node stalled on disk (worst node)',color:C.bad,data:stall}],thresholds:[{y:5,color:C.warn,label:'5%'},{y:20,color:C.bad,label:'20%'}],annots:[{i:22,y:17,text:'busy and stalled together,\nin the stop\'s minutes: storage owns it',dx:-240,dy:-45}]};},
+ hung(){const a=new Array(N).fill(0),b=new Array(N).fill(0);a[18]=2;a[19]=4;a[20]=4;a[21]=3;b[20]=1;return{unit:'',stack:true,series:[{name:'ip-10-0-41-7',color:C.warn,bars:true,data:a},{name:'ip-10-0-12-9',color:'#F5B83D',bars:true,data:b}],annots:[{i:19,y:4,text:'one task stuck for 10 minutes\ncounts several times',dx:40,dy:-10}]};},
+ cni(){const a=new Array(N).fill(0),b=new Array(N).fill(0);a[12]=6;a[13]=14;a[14]=11;a[15]=4;b[13]=3;return{unit:'',stack:true,series:[{name:'ip-10-0-41-7',color:C.bad,bars:true,data:a},{name:'ip-10-0-55-3',color:'#FF9830',bars:true,data:b}],annots:[{i:13,y:17,text:'the pool ran dry while pods landed:\ncapacity, not CPU',dx:40,dy:-5}]};},
+ svcmap(){const a=series(N,3,2),b=series(N,2,1.5),c=series(N,2,1.5);bump(a,6,7,28);bump(c,8,9,30);bump(b,18,30,150,'flat');return{unit:'s',ymax:200,series:[{name:'ip-10-0-41-7',color:C.bad,data:b},{name:'ip-10-0-12-9',color:C.muted,data:a},{name:'ip-10-0-77-2',color:C.dim,data:c}],thresholds:[{y:90,color:C.warn,label:'90 s for 5 min'}],annots:[{i:6.5,y:31,text:'a new node\'s first full map: ~30 s, normal',dx:30,dy:-30},{i:24,y:152,text:'routes behind for an hour:\nkube-proxy or its API watch',dx:-230,dy:30}]};},
+ drops(){const d=series(N,0,0);bump(d,9,11,60);const pps=new Array(N).fill(0),ll=new Array(N).fill(0);pps[22]=40;pps[23]=120;pps[24]=90;ll[15]=30;ll[16]=55;return{unit:'',ymax:140,series:[{name:'packet-rate allowance exceeded',color:'#8E8E8E',bars:true,data:pps},{name:'link-local allowance (DNS, metadata)',color:C.info,bars:true,data:ll},{name:'dropped: a CPU\'s receive backlog was full (/s)',color:C.bad,data:d}],stack:true,annots:[{i:10,y:60,text:'one hot CPU\'s backlog: the only\nnetwork job CPU placement touches',dx:30,dy:-5},{i:23,y:120,text:'the instance\'s own limit:\nno CPU setting fixes it',dx:-230,dy:-10}]};},
+ silent(){const a=new Array(N).fill(0);a[21]=1;a[22]=2;a[23]=2;a[24]=2;a[25]=1;return{unit:'',ymax:3,series:[{name:'nodes whose kubelet answered no scrape for 2 minutes',color:C.bad,bars:true,data:a}],annots:[{i:23,y:2,text:'line it up with heartbeat age\nand stuck tasks',dx:40,dy:-5}]};},
+};
+document.querySelectorAll('svg[data-chart]').forEach(svg=>{const k=svg.dataset.chart;const wide=svg.closest('.pcard').classList.contains('wide');const W=wide?1180:600;if(k==='split')hbars(svg,[{name:'all vCPUs',v:32,color:'#8E8E8E'},{name:"pods' shared pool",v:28,color:C.pods},{name:'reserved for the node',v:4,color:C.kubelet}],32,'',W);else if(k==='covtable')table(svg,['Node','Missing source','Meaning'],[['ip-10-0-41-7','kubelet (silent 2+ min)','inside view gone'],['ip-10-0-63-4','node-exporter','disk and memory panels blank'],['ip-10-0-18-1','cAdvisor','waiting panels blank']],W);else if(specs[k]){seed=11;const sp=specs[k]();sp.w=W;sp.h=wide?250:240;chart(svg,sp);}});
+
+/* ---------- 01 pod scene ---------- */
+const podSteps=[
+ {text:['The kubelet watches the API server and sees a pod assigned to its node.','The clock on "pod start" begins here.'],on:['g-api','g-kubelet','a-watch'],cri:'CRI call',run:'run',watch:[['Pods slow to start','bad']]},
+ {text:['The kubelet asks containerd to run a sandbox: the pod\'s network namespace and pause container.','containerd asks the CNI; aws-node must hand over a free address.'],on:['g-kubelet','g-containerd','g-cni','g-pod','a-cri','a-cni','a-run'],cri:'run_podsandbox',run:'sandbox up',watch:[['Runtime refused work','bad'],['Runtime refused work, by kind of call','containerd'],['Sandboxes refused: no address free','agents']]},
+ {text:['Now the containers: create_container, then start_container, image pulls included.','Each is a call that can fail or run late while the node stays Ready.'],on:['g-kubelet','g-containerd','g-pod','a-cri','a-run'],cri:'create / start_container',run:'containers running',watch:[['Runtime refused work','bad'],['Pods slow to start','bad'],['Runtime call time, mean, by kind','containerd']]},
+ {text:['Every second the kubelet lists its containers to see what changed (the pod lifecycle event generator, PLEG).','If that pass falls behind, the kubelet\'s picture of the node goes stale.'],on:['g-kubelet','g-pod','a-pleg','g-containerd'],cri:'list_containers',run:'',watch:[['Kubelet lost track of its pods','bad'],['Kubelet\'s pod-state check age, oldest nodes','kubelet']]},
+ {text:['Every 10 seconds the kubelet renews its lease with the API server: the node\'s heartbeat.','It is the one signal that comes from outside the node, so it survives a freeze.'],on:['g-kubelet','g-api','a-lease'],cri:'',run:'',watch:[['Node stopped checking in','bad'],['Heartbeat age, oldest nodes','kubelet']]},
+ {text:['Stopping: the kubelet sends the stop; the app may use its grace period; then the runtime removes the task,','unmounts the writable layer and removes the sandbox. The cleanup is the node\'s own work.'],on:['g-kubelet','g-containerd','g-pod','a-cri','a-stop'],cri:'stop_container',run:'',watch:[['Containers slow to stop','warn'],['Container stop time, slowest nodes','kubelet'],['Teardown calls, 9 in 10 under','agents']]}];
+const podScene=document.getElementById('pod-scene');
+function showPodStep(k){const st=podSteps[k];podScene.querySelectorAll('.actor,.arrow').forEach(g=>{g.style.transition='opacity .3s';g.style.opacity=st.on.includes(g.id)?1:0.18;});
+ document.getElementById('pod-text').textContent=st.text.join(' ');
+ document.getElementById('a-cri-label').textContent=st.cri;document.getElementById('a-run-label').textContent=st.run;
+ const w=document.getElementById('pod-watch');w.innerHTML='';st.watch.forEach(([n,c])=>{const s=document.createElement('span');s.className='chip';s.style.setProperty('--c',`var(--${c})`);s.innerHTML='<i></i>'+n;w.appendChild(s);});
+ document.querySelectorAll('#pod-steps button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.step===k)));}
+document.querySelectorAll('#pod-steps button').forEach(b=>b.addEventListener('click',()=>showPodStep(+b.dataset.step)));showPodStep(0);
+
+/* ---------- 02 wait scene ---------- */
+const waitSvg=document.getElementById('wait-scene');
+const waitModes={
+ prompt:{wait:0.02,stall:0,use:100,caption:'The pods use every free cycle. Each time the kubelet wakes, a CPU is handed to it within microseconds: hatched waiting is almost zero. CPU use reads 100% and nothing is wrong.',pods:['fine','starts and stops on time'],waitColor:C.ok,waitText:'0.3%'},
+ waiting:{wait:0.45,stall:0,use:100,caption:'Same pods, same 100%. Now the kubelet shares the CPUs with them and queues behind their work each time it wakes. The hatched stretches are CPU pressure: work ready, no CPU. Pod starts and stops arrive late, and nothing in CPU use changed.',pods:['late','sandboxes and stops queue behind pods'],waitColor:C.warn,waitText:'18%'},
+ stall:{wait:0,stall:1,use:100,caption:'Every task on the node is stuck waiting for memory or disk. The CPUs may even read busy (reclaim is work). Nobody progresses: full stall. This is the condition that ends in a frozen node.',pods:['frozen','nothing starts, nothing stops'],waitColor:C.bad,waitText:'–'}};
+function drawWait(mode){const m=waitModes[mode];clear(waitSvg);const L=60,R=960,W=R-L,y0=50,h=46;
+ el('text',{x:L,y:16,fill:C.muted,'font-size':12.5},waitSvg,'one CPU · 10 seconds');for(let s=0;s<=10;s++){const x=L+W*s/10;el('line',{x1:x,x2:x,y1:y0-6,y2:y0+h+70,stroke:C.line},waitSvg);el('text',{x,y:y0+h+86,'text-anchor':'middle',fill:C.dim,'font-size':10.5},waitSvg,s+' s');}
+ el('text',{x:L-8,y:y0+h/2+4,'text-anchor':'end',fill:C.muted,'font-size':12},waitSvg,'CPU');el('text',{x:L-8,y:y0+h+36,'text-anchor':'end',fill:C.kubelet,'font-size':12},waitSvg,'kubelet');
+ if(mode==='stall'){el('rect',{x:L,y:y0,width:W,height:h,rx:4,fill:'url(#hatchred)'},waitSvg);el('text',{x:L+W/2,y:y0+h/2+5,'text-anchor':'middle',fill:C.ink,'font-size':13,'font-weight':600},waitSvg,'every task stalled on memory: reclaim, no progress');el('rect',{x:L,y:y0+h+16,width:W,height:26,rx:4,fill:'url(#hatchred)'},waitSvg);el('text',{x:L+W/2,y:y0+h+34,'text-anchor':'middle',fill:C.ink,'font-size':12},waitSvg,'kubelet stuck too');}
+ else{const wakes=[1.2,3.6,6.1,8.4];let x=L;const wakesPx=wakes.map(s=>L+W*s/10);const wpx=W*m.wait/10;
+  wakesPx.forEach((wx,i)=>{el('rect',{x,y:y0,width:wx-x,height:h,fill:C.pods,opacity:.55},waitSvg);el('text',{x:x+(wx-x)/2,y:y0+h/2+5,'text-anchor':'middle',fill:C.ink,'font-size':12},waitSvg,'pods');x=wx;
+   if(wpx>2){el('rect',{x,y:y0,width:wpx,height:h,fill:C.pods,opacity:.55},waitSvg);el('rect',{x,y:y0+h+16,width:wpx,height:26,rx:3,fill:'url(#hatch)'},waitSvg);el('text',{x:x+wpx/2,y:y0+h+34,'text-anchor':'middle',fill:C.ink,'font-size':10.5},waitSvg,'wait');x+=wpx;}
+   const run=22;el('rect',{x,y:y0,width:run,height:h,fill:C.kubelet},waitSvg);el('rect',{x,y:y0+h+16,width:run,height:26,rx:3,fill:C.kubelet},waitSvg);el('line',{x1:wx,x2:wx,y1:y0-10,y2:y0+h+44,stroke:C.kubelet,'stroke-width':1.5,'stroke-dasharray':'3 3'},waitSvg);el('text',{x:wx,y:y0-14,'text-anchor':'middle',fill:C.kubelet,'font-size':10.5},waitSvg,'wakes');x+=run;});
+  el('rect',{x,y:y0,width:R-x,height:h,fill:C.pods,opacity:.55},waitSvg);el('text',{x:x+(R-x)/2,y:y0+h/2+5,'text-anchor':'middle',fill:C.ink,'font-size':12},waitSvg,'pods');
+  el('rect',{x:L,y:y0+h+16,width:W,height:26,rx:3,fill:'none',stroke:C.line},waitSvg);}
+ el('text',{x:L,y:y0+h+120,fill:C.dim,'font-size':11.5},waitSvg,'amber = kubelet running · hatched = ready but no CPU (CPU pressure) · red hatch = full stall');
+ const ro=(id,v,col)=>{const e=document.getElementById(id);e.textContent=v;if(col)e.style.setProperty('--v',col);};
+ ro('ro-use',m.use+'%');ro('ro-wait',m.waitText,m.waitColor);ro('ro-stall',m.stall?'100%':'0%',m.stall?C.bad:C.ok);ro('ro-pods',m.pods[0],m.pods[0]==='fine'?C.ok:m.pods[0]==='late'?C.warn:C.bad);document.getElementById('ro-pods-s').textContent=m.pods[1];document.getElementById('wait-caption').textContent=m.caption;
+ document.querydoc=null;document.querySelectorAll('#wait-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.wait===mode)));}
+document.querySelectorAll('#wait-controls button').forEach(b=>b.addEventListener('click',()=>drawWait(b.dataset.wait)));drawWait('prompt');
+
+/* ---------- 03 cpu board ---------- */
+const board=document.getElementById('cpu-board');let topo='intel',agree='capacity';
+const agreeText={capacity:'Capacity: subtracting 4 from allocatable only changes scheduling arithmetic. The scheduler stops placing 4 vCPUs\' worth of requests here. It does not move a single process.',topology:'Topology: on Intel each core has two hardware threads that share its execution units. Reserving CPU 0 without CPU 16 leaves half the core open to a pod. The lane takes both threads of two cores.',placement:'Placement: systemd starts the kubelet, containerd and the shims on the lane; the kubelet\'s static CPU manager hands the pods only the other 28. Either half missing and the lane leaks.',agents:'Agent exception: aws-node, kube-proxy, the DNS cache, the log shipper and the exporters are pods, so they would land on the pods\' 28. A containerd plugin moves the listed ones onto the lane. It fails open: if it is dropped the agents quietly run with the pods, and their CPU waiting in section 2 is the first sign.'};
+function drawBoard(){clear(board);const lane=topo==='intel'?[0,1,16,17]:[0,1,2,3];const cw=50,gap=8,x0=50;const rowY=[40,120];
+ el('text',{x:x0,y:22,fill:C.muted,'font-size':12.5},board,topo==='intel'?'32 vCPUs · Intel: CPU n and CPU n+16 are the two threads of one core':'32 vCPUs · AMD / Graviton: CPUs 0 to 3 are the lane');
+ for(let i=0;i<32;i++){const r=i<16?0:1,c=i%16;const x=x0+c*(cw+gap),y=rowY[r];const isLane=lane.includes(i);
+  el('rect',{x,y,width:cw,height:cw,rx:8,fill:isLane?'#2b2615':'#13213a',stroke:isLane?C.kubelet:C.pods,'stroke-width':isLane?2.5:1.2,opacity:(agree==='capacity')?1:(isLane?1:.55)},board);
+  el('text',{x:x+cw/2,y:y+cw/2+5,'text-anchor':'middle',fill:isLane?C.kubelet:C.pods,'font-size':13,'font-weight':600},board,i);
+  if(agree==='placement'&&!isLane)el('circle',{cx:x+cw-10,cy:y+10,r:4,fill:C.pods},board);
+  if(agree==='placement'&&isLane)el('rect',{x:x+6,y:y+cw-14,width:cw-12,height:8,rx:3,fill:C.kubelet},board);
+  if(agree==='agents'&&isLane)el('circle',{cx:x+cw-10,cy:y+10,r:5,fill:C.agents},board);}
+ if(topo==='intel'&&(agree==='topology'||agree==='placement')){[0,1].forEach(c=>{const x=x0+c*(cw+gap)+cw/2;el('path',{d:`M${x-16} ${rowY[0]+cw} V${rowY[1]}`,stroke:C.agents,'stroke-width':agree==='topology'?3:1.5,fill:'none'},board);el('path',{d:`M${x+16} ${rowY[0]+cw} V${rowY[1]}`,stroke:C.agents,'stroke-width':agree==='topology'?3:1.5,fill:'none'},board);});el('text',{x:x0+2*(cw+gap)+6,y:rowY[0]+cw+20,fill:C.agents,'font-size':12},board,'one core, both threads');}
+ if(agree==='topology'&&topo==='other')el('text',{x:x0+4*(cw+gap)+6,y:rowY[0]+cw/2+5,fill:C.agents,'font-size':12},board,'no sibling threads to worry about: four whole CPUs');
+ const ly=rowY[1]+cw+28;el('rect',{x:x0,y:ly,width:12,height:12,rx:3,fill:'#2b2615',stroke:C.kubelet,'stroke-width':2},board);el('text',{x:x0+18,y:ly+11,fill:C.muted,'font-size':12.5},board,'the lane: kubelet, containerd, shims, listed agents');el('rect',{x:x0+340,y:ly,width:12,height:12,rx:3,fill:'#13213a',stroke:C.pods},board);el('text',{x:x0+358,y:ly+11,fill:C.muted,'font-size':12.5},board,'the pods\' 28 (the shared pool)');
+ if(agree==='capacity'){el('rect',{x:x0+620,y:ly-8,width:300,height:30,rx:8,fill:'#0a1016',stroke:C.info},board);el('text',{x:x0+770,y:ly+12,'text-anchor':'middle',fill:C.info,'font-size':12.5},board,'scheduler sees: capacity 32 · allocatable 28');}
+ if(agree==='agents'){el('rect',{x:x0+620,y:ly-8,width:300,height:30,rx:8,fill:'#0a1016',stroke:C.agents},board);el('text',{x:x0+770,y:ly+12,'text-anchor':'middle',fill:C.agents,'font-size':12.5},board,'● agents moved onto the lane by the plugin');}
+ if(agree==='placement'){el('rect',{x:x0+620,y:ly-8,width:300,height:30,rx:8,fill:'#0a1016',stroke:C.info},board);el('text',{x:x0+770,y:ly+12,'text-anchor':'middle',fill:C.info,'font-size':12.5},board,'▬ systemd pins hosts · ● pods kept off by the kubelet');}
+ document.getElementById('agree-caption').textContent=agreeText[agree];
+ document.querySelectorAll('#topo-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.topo===topo)));document.querySelectorAll('#agree button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.ag===agree)));}
+document.querySelectorAll('#topo-controls button').forEach(b=>b.addEventListener('click',()=>{topo=b.dataset.topo;drawBoard();}));document.querySelectorAll('#agree button').forEach(b=>b.addEventListener('click',()=>{agree=b.dataset.ag;drawBoard();}));drawBoard();
+
+/* ---------- 04 memory scene ---------- */
+const memSvg=document.getElementById('mem-scene');let floor='off';const slider=document.getElementById('mem-slider');
+function drawMem(){const d=+slider.value;document.getElementById('mem-out').textContent=d+'%';clear(memSvg);const L=50,W=900,y=74,h=70,HOST=180,KUB=35;
+ let pods=d/100*W,host=HOST,reclaimed=0,oom=false;
+ if(floor==='off'){pods=Math.min(pods,W);host=Math.max(0,Math.min(HOST,W-pods));reclaimed=HOST-host;}else{if(pods>W-HOST){oom=true;pods=W-HOST;}}
+ const free=Math.max(0,W-pods-host);
+ el('text',{x:L,y:22,fill:C.muted,'font-size':12.5},memSvg,'the node\'s RAM · left to right: pods, the host\'s own pages (kubelet code, containerd code and the image files), free');
+ el('rect',{x:L,y,width:W,height:h,rx:8,fill:'#1a2430'},memSvg);
+ el('rect',{x:L,y,width:pods,height:h,rx:8,fill:C.pods,opacity:.6},memSvg);if(pods>60)el('text',{x:L+pods/2,y:y+h/2+5,'text-anchor':'middle',fill:C.ink,'font-size':13,'font-weight':600},memSvg,'pods');
+ if(oom){el('rect',{x:L+pods-70,y:y+8,width:60,height:h-16,rx:6,fill:C.bad},memSvg);el('text',{x:L+pods-40,y:y+h/2+5,'text-anchor':'middle',fill:'#0b1117','font-size':12,'font-weight':700},memSvg,'OOM ✗');}
+ const hx=L+pods;if(host>0){const kub=Math.min(KUB,host);el('rect',{x:hx,y,width:kub,height:h,fill:C.kubelet,opacity:.9},memSvg);if(host-kub>0)el('rect',{x:hx+kub,y,width:host-kub,height:h,fill:C.containerd,opacity:.85},memSvg);if(host>90)el('text',{x:hx+host/2,y:y+h/2+5,'text-anchor':'middle',fill:'#0b1117','font-size':12.5,'font-weight':600},memSvg,'host pages');}
+ if(reclaimed>0){el('rect',{x:hx+host,y,width:0,height:h},memSvg);el('rect',{x:L+pods-reclaimed,y,width:reclaimed,height:h,fill:'url(#hatch)',opacity:.8},memSvg);el('text',{x:L+pods,y:y+h+18,'text-anchor':'end',fill:C.warn,'font-size':12},memSvg,'host pages reclaimed → read back from disk, again and again');}
+ if(free>40){el('text',{x:hx+host+free/2,y:y+h/2+5,'text-anchor':'middle',fill:C.dim,'font-size':12.5},memSvg,'free');}
+ if(floor==='on'){el('line',{x1:L+W-HOST,x2:L+W-HOST,y1:y-14,y2:y+h+14,stroke:C.kubelet,'stroke-width':2.5},memSvg);el('text',{x:L+W-HOST-6,y:y-22,'text-anchor':'end',fill:C.kubelet,'font-size':12,'font-weight':600},memSvg,'memory.min: the kernel will not take back pages to the right of this line');}
+ /* disk */
+ const dy=y+h+66;el('rect',{x:L,y:dy-14,width:100,height:34,rx:8,fill:'#0a1016',stroke:C.line},memSvg);el('text',{x:L+50,y:dy+8,'text-anchor':'middle',fill:C.muted,'font-size':12.5},memSvg,'disk');
+ if(reclaimed>0){const rate=Math.round(reclaimed/HOST*3000);el('path',{d:`M${L+104} ${dy+3} L${L+pods-reclaimed/2} ${y+h+26}`,stroke:C.bad,'stroke-width':2.5,fill:'none','marker-end':'url(#arr)'},memSvg);el('text',{x:L+112,y:dy+8,fill:C.bad,'font-size':12.5,'font-weight':600},memSvg,`kubelet and containerd read their code back: ~${rate.toLocaleString()} pages/s (major faults)`);}
+ else el('text',{x:L+112,y:dy+8,fill:C.dim,'font-size':12.5},memSvg,floor==='on'&&oom?'a pod died; the node kept its own pages and kept working':'host pages stay in memory; nothing to read back');
+ const ro=(id,v,col)=>{const e=document.getElementById(id);e.textContent=v;e.style.setProperty('--v',col);};
+ const frac=reclaimed/HOST;const faults=Math.round(frac*3000);ro('ro-majflt',faults.toLocaleString()+' /s',faults===0?C.ok:faults<800?C.warn:C.bad);
+ const hb=frac<.3?10:frac<.7?Math.round(20+frac*60):Math.round(60+frac*300);ro('ro-hb',hb+' s',hb<30?C.ok:hb<60?C.warn:C.bad);
+ const frozen=frac>.7;ro('ro-node',frozen?'frozen':frac>.3?'struggling':'working',frozen?C.bad:frac>.3?C.warn:C.ok);document.getElementById('ro-node-s').textContent=frozen?'not Ready, heartbeat missed, metrics gone':frac>.3?'starts and stops slow; PLEG falls behind':'pods start and stop';
+ ro('ro-oom',oom?'one killed':'all running',oom?C.warn:C.ok);document.getElementById('ro-oom-s').textContent=oom?'the floor\'s price, here a pod; only the journal names the victim':'no OOM kills';
+ const cap=document.getElementById('mem-caption');
+ cap.textContent=floor==='off'?(frac===0?'Plenty of room. The host\'s code and containerd\'s image pages sit in memory untouched.':frac<.7?'Memory is short. The kernel reclaims whatever it can, and the host\'s pages are fair game: the kubelet and containerd start reading their own code back from disk. Every pod start and stop now waits on that.':'The host has almost no pages left. Reclaim and read-back chase each other, every task stalls, the lease is not renewed. From outside the node looks frozen until an OOM kill ends it, or it never comes back.')
+  :(oom?'The pods wanted more than the node has left. With the host\'s pages fenced off, the kernel OOM-kills a process instead, in this picture a pod. The node keeps working through the shortage: that is the trade.':'The floor is in place. As the pods grow the kernel reclaims around the fence, never through it. The host keeps its code and image pages whatever the pods do.');
+ document.querySelectorAll('#floor-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.floor===floor)));}
+slider.addEventListener('input',drawMem);document.querySelectorAll('#floor-controls button').forEach(b=>b.addEventListener('click',()=>{floor=b.dataset.floor;drawMem();}));drawMem();
+
+/* ---------- 05 stop scene ---------- */
+const stopSvg=document.getElementById('stop-scene');
+const stopModes={quiet:{g:1.5,t:0.8,io:0,caption:'The application exits inside its grace period; the runtime removes the task, unmounts the writable layer and removes the sandbox in under a second. Under a CPU-heavy tenant, protected nodes stopped containers in about 2.3 s where unprotected ones took 10 to 92 s.'},
+ busy:{g:1.5,t:58,io:22,caption:'The application exits as quickly as before. Then the runtime\'s helper sleeps in the kernel waiting for the root volume: the unmount and removal crawl, and the whole node reads I/O stall. Reserved CPUs cannot finish that I/O. The stop is the node\'s problem.'},
+ grace:{g:30,t:0.8,io:0,caption:'The pod ignores its stop signal and is killed when its grace period ends, 30 s by default. The stop time reads 31 s and the node did nothing wrong: lines resting at 30 s on the dashboard are this. Confirm the pod\'s terminationGracePeriodSeconds before dismissing it.'}};
+function drawStop(mode){const m=stopModes[mode];clear(stopSvg);const L=60,R=960,W=R-L,y=60,h=44;const total=m.g+m.t;const span=Math.max(10,total*1.25);const X=s=>L+W*s/span;
+ el('text',{x:L,y:18,fill:C.muted,'font-size':12.5},stopSvg,`one container stop · axis ${span<20?'0 to 10 s':'0 to '+Math.round(span)+' s'}`);
+ const ticks=span<20?[0,2,4,6,8,10]:span<60?[0,10,20,30,40]:[0,15,30,45,60,75];ticks.forEach(s=>{if(s>span)return;el('line',{x1:X(s),x2:X(s),y1:y-8,y2:y+h+54,stroke:C.line},stopSvg);el('text',{x:X(s),y:y+h+70,'text-anchor':'middle',fill:C.dim,'font-size':10.5},stopSvg,s+' s');});
+ el('rect',{x:X(0),y,width:X(m.g)-X(0),height:h,rx:5,fill:C.pods,opacity:.6},stopSvg);if(X(m.g)-X(0)>70)el('text',{x:(X(0)+X(m.g))/2,y:y+h/2+5,'text-anchor':'middle',fill:C.ink,'font-size':12.5},stopSvg,m.g>8?'grace period: the pod\'s own time':'app exits');else el('text',{x:X(0)+2,y:y+h+16,fill:C.pods,'font-size':11.5},stopSvg,'app exits');
+ el('rect',{x:X(m.g),y,width:Math.max(4,X(total)-X(m.g)),height:h,rx:5,fill:m.t>5?C.bad:C.agents,opacity:.85},stopSvg);el('text',{x:(X(m.g)+X(total))/2,y:y+h/2+5,'text-anchor':'middle',fill:m.t>5?C.ink:'#0b1117','font-size':12.5},stopSvg,m.t>5?'runtime teardown: remove task → unmount → remove sandbox':'teardown');
+ el('line',{x1:X(0),x2:X(0),y1:y-14,y2:y+h+6,stroke:C.kubelet,'stroke-width':2},stopSvg);el('text',{x:X(0)+4,y:y-18,fill:C.kubelet,'font-size':11.5},stopSvg,'stop_container sent');
+ el('line',{x1:X(total),x2:X(total),y1:y-14,y2:y+h+6,stroke:C.kubelet,'stroke-width':2},stopSvg);el('text',{x:X(total)+4,y:y-18,fill:C.kubelet,'font-size':11.5},stopSvg,`done: ${total.toFixed(1)} s`);
+ if(m.io){el('rect',{x:X(m.g),y:y+h+22,width:X(total)-X(m.g),height:16,rx:3,fill:'url(#hatchred)'},stopSvg);el('text',{x:X(m.g)+4,y:y+h+50,fill:C.bad,'font-size':11.5,'font-weight':600},stopSvg,'whole node stalled on disk · root volume busy ~100% · a hung-task detection would follow at 120 s');}
+ el('text',{x:L,y:y+h+108,fill:C.dim,'font-size':11.5},stopSvg,'blue = the application\'s own shutdown · violet/red = the runtime\'s cleanup, the node\'s work');
+ const ro=(id,v,col)=>{const e=document.getElementById(id);e.textContent=v;if(col)e.style.setProperty('--v',col);};
+ ro('ro-stop',total.toFixed(1)+' s',total<15?C.ok:total<45?C.warn:C.bad);ro('ro-grace',m.g.toFixed(1)+' s');ro('ro-teardown',m.t.toFixed(1)+' s',m.t<5?C.ok:C.bad);ro('ro-io',m.io+'%',m.io?C.bad:C.ok);
+ document.getElementById('stop-caption').textContent=m.caption;document.querySelectorAll('#stop-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stop===mode)));}
+document.querySelectorAll('#stop-controls button').forEach(b=>b.addEventListener('click',()=>drawStop(b.dataset.stop)));drawStop('quiet');
+
+/* ---------- 06 network scene ---------- */
+const netSvg=document.getElementById('net-scene');
+const nets={
+ address:{chain:[['kubelet','needs a sandbox',C.kubelet],['containerd','asks the CNI',C.containerd],['aws-node','looks for a free address',C.agents],['address pool','empty ✗',C.bad],['pod','never gets a sandbox',C.pods]],fail:3,owner:['aws-node','the IP address manager',C.agents],cpu:['No','a prompt process can still have no address',C.bad],where:['Runtime refused work: sandbox calls only','then Network path tab: Sandboxes refused, Free pod addresses'],caption:'The kubelet asks containerd for a sandbox; containerd asks the CNI; aws-node must hand over a free address from the pool it has attached. When the pool is empty, run_podsandbox fails on a node that is otherwise perfectly prompt.'},
+ map:{chain:[['API server','a Service or endpoint changed',C.muted],['kube-proxy','receives the change',C.agents],['pending changes','pile up ✗',C.bad],['nftables rules','the node\'s Service map, behind',C.info],['traffic','sent to a route that is not there yet',C.pods]],fail:2,owner:['kube-proxy','and its API watch',C.agents],cpu:['Partly','kube-proxy is on the lane; a slow watch or huge churn is not a CPU problem',C.warn],where:['Service map behind its changes','then Service changes waiting to be applied'],caption:'Every Service and endpoint change reaches each node\'s kube-proxy, which rewrites the node\'s forwarding rules. In nftables mode the update stays bounded. When pending changes stop draining, traffic to new or moved Services has nowhere to go on that node, while sandboxes and stops are fine.'},
+ packet:{chain:[['network card','a packet arrives',C.muted],['instance allowance','packet rate, bandwidth, conntrack',C.info],['per-CPU backlog','one CPU\'s queue overflows ✗',C.bad],['softirq','receive processing',C.kubelet],['socket','the application reads it',C.pods]],fail:2,owner:['the kernel\'s receive path','and the instance type\'s limits',C.kubelet],cpu:['Only here','a hot receive CPU can be spread (RPS on workload CPUs); allowances cannot',C.warn],where:['Receive backlog drops and squeezes · Instance allowances exceeded','then CPU spent receiving packets'],caption:'A packet that reached the node can still be lost: the instance may have hit its packet-rate or bandwidth allowance (the card queues or drops it), or the one CPU handling that flow\'s receive queue has a full backlog. The first is the instance type. The second is the only network job where CPU placement matters.'}};
+function drawNet(k){const n=nets[k];clear(netSvg);const bw=170,gap=28,x0=30,y=70,h=78;
+ n.chain.forEach((c,i)=>{const x=x0+i*(bw+gap);const isFail=i===n.fail;el('rect',{x,y,width:bw,height:h,rx:12,fill:isFail?'#2a1a1e':'#1d2a38',stroke:isFail?C.bad:c[2],'stroke-width':isFail?2.5:1.8},netSvg);el('text',{x:x+bw/2,y:y+30,'text-anchor':'middle',fill:isFail?C.bad:c[2],'font-size':15,'font-weight':600},netSvg,c[0]);
+  const words=c[1].split(' ');let line='',lines=[];words.forEach(w=>{if((line+' '+w).length>24){lines.push(line);line=w;}else line=line?line+' '+w:w;});lines.push(line);lines.forEach((l,li)=>el('text',{x:x+bw/2,y:y+52+li*14,'text-anchor':'middle',fill:C.muted,'font-size':11.5},netSvg,l));
+  if(i<n.chain.length-1)el('path',{d:`M${x+bw+2} ${y+h/2} H${x+bw+gap-4}`,stroke:C.muted,'stroke-width':2,'marker-end':'url(#arr)',fill:'none'},netSvg);
+  if(isFail){el('text',{x:x+bw/2,y:y+h+26,'text-anchor':'middle',fill:C.bad,'font-size':12.5,'font-weight':600},netSvg,'fails here');}});
+ el('text',{x:x0,y:36,fill:C.muted,'font-size':12.5},netSvg,k==='address'?'job 1 · give a new pod an address':k==='map'?'job 2 · program the node\'s Service map':'job 3 · receive a packet for a pod');
+ el('text',{x:x0,y:y+h+70,fill:C.dim,'font-size':11.5},netSvg,'violet = node agent on the lane · blue = the pod · red = the step that failed');
+ const set=(id,v,col)=>{const e=document.getElementById(id);e.textContent=v;if(col)e.style.setProperty('--v',col);};
+ set('ro-net-owner',n.owner[0],n.owner[2]);document.getElementById('ro-net-owner-s').textContent=n.owner[1];set('ro-net-cpu',n.cpu[0],n.cpu[2]);document.getElementById('ro-net-cpu-s').textContent=n.cpu[1];set('ro-net-where',n.where[0]);document.getElementById('ro-net-where-s').textContent=n.where[1];document.getElementById('net-caption').textContent=n.caption;
+ document.querySelectorAll('#net-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.net===k)));}
+document.querySelectorAll('#net-controls button').forEach(b=>b.addEventListener('click',()=>drawNet(b.dataset.net)));drawNet('address');
+
+/* ---------- 07 freeze scene ---------- */
+(function(){const svg=document.getElementById('freeze-scene');const L=125,R=790,W=R-L;const X=m=>L+W*m/40;
+ el('text',{x:L,y:24,fill:C.muted,'font-size':12.5},svg,'forty minutes on one node · the node freezes in memory reclaim from minute 22 to 31');
+ for(let m=0;m<=40;m+=5){el('line',{x1:X(m),x2:X(m),y1:40,y2:230,stroke:C.line},svg);el('text',{x:X(m),y:246,'text-anchor':'middle',fill:C.dim,'font-size':10.5},svg,m+' min');}
+ /* inside view */
+ const y1=50,h1=70;el('text',{x:L-8,y:y1+12,'text-anchor':'end',fill:C.kubelet,'font-size':12},svg,'inside');el('text',{x:L-8,y:y1+27,'text-anchor':'end',fill:C.dim,'font-size':10.5},svg,'the node\'s own');el('text',{x:L-8,y:y1+40,'text-anchor':'end',fill:C.dim,'font-size':10.5},svg,'metrics');
+ seed=5;let d='';for(let i=0;i<=80;i++){const m=i/2;if(m>22&&m<31)continue;const v=m>18&&m<=22?2+(m-18)*5:1+rnd()*1.5;const x=X(m),yy=y1+h1-v/25*h1;d+=(d===''||m===31?`M${x} ${yy}`:` L${x} ${yy}`);}
+ el('path',{d,stroke:C.kubelet,'stroke-width':2,fill:'none'},svg);el('rect',{x:X(22),y:y1,width:X(31)-X(22),height:h1,fill:'url(#hatch)'},svg);el('text',{x:X(26.5),y:y1+h1/2+4,'text-anchor':'middle',fill:C.ink,'font-size':12,'font-weight':600},svg,'no scrape answered');
+ el('text',{x:X(21.5),y:y1-4,'text-anchor':'end',fill:C.kubelet,'font-size':11},svg,'code read back rises…');
+ /* outside view */
+ const y2=140,h2=80;el('text',{x:L-8,y:y2+12,'text-anchor':'end',fill:C.info,'font-size':12},svg,'outside');el('text',{x:L-8,y:y2+27,'text-anchor':'end',fill:C.dim,'font-size':10.5},svg,'lease age at the');el('text',{x:L-8,y:y2+40,'text-anchor':'end',fill:C.dim,'font-size':10.5},svg,'API server');
+ const Y2=v=>y2+h2-Math.min(v,600)/600*h2;let d2='';for(let i=0;i<=80;i++){const m=i/2;let v=10+rnd()*8;if(m>=22&&m<31)v=(m-22)*60+20;if(m>=31&&m<32)v=15;d2+=(i===0?`M${X(m)} ${Y2(v)}`:` L${X(m)} ${Y2(v)}`);}
+ el('path',{d:d2,stroke:C.info,'stroke-width':2.2,fill:'none'},svg);el('line',{x1:L,x2:R,y1:Y2(60),y2:Y2(60),stroke:C.bad,'stroke-width':1.5,'stroke-dasharray':'5 4'},svg);el('text',{x:R-4,y:Y2(60)-4,'text-anchor':'end',fill:C.bad,'font-size':10.5},svg,'60 s');
+ el('text',{x:X(21.5),y:Y2(480),'text-anchor':'end',fill:C.info,'font-size':11.5},svg,'the heartbeat keeps reporting what the node cannot');
+ /* tile */
+ const tx=R+30;el('text',{x:tx,y:40,fill:C.dim,'font-size':11},svg,'what the tiles read (one node: orange)');el('rect',{x:tx,y:y1+4,width:150,height:60,rx:8,fill:C.orange},svg);el('text',{x:tx+10,y:y1+22,fill:'#0b1117','font-size':11,'font-weight':600},svg,'Kubelet went silent');el('text',{x:tx+10,y:y1+54,fill:'#0b1117','font-size':26,'font-weight':700},svg,'1');
+ el('rect',{x:tx,y:y2+4,width:150,height:60,rx:8,fill:C.orange},svg);el('text',{x:tx+10,y:y2+22,fill:'#0b1117','font-size':11,'font-weight':600},svg,'Node stopped checking in');el('text',{x:tx+10,y:y2+54,fill:'#0b1117','font-size':26,'font-weight':700},svg,'1');
+})();
+
+/* ---------- 08 dashboard map ---------- */
+const mapSvg=document.getElementById('dash-map');
+const harmDef=[['t_cri','Refused work'],['t_restart','Software restarted'],['t_pleg','Lost track of pods'],['t_lease','Stopped checking in'],['t_silent','Kubelet silent'],['t_nmem','Node mem. stall'],['t_start','Slow to start'],['t_contract','CPU split']];
+const riskDef=[['t_errone','Errors, isolated'],['t_leaselate','Heartbeat late'],['t_wait','Starved of CPU'],['t_hmem','Software mem. stall'],['t_disk','Node disk stall'],['t_hung','Stuck tasks'],['t_stop','Slow to stop'],['t_missing','Missing telemetry']];
+const expDef=[['t_boot','Boot errors'],['t_oom','OOM kills, all'],['t_nodes','Nodes in view']];
+const s1Def=[['o_cri','Refused work, by kind'],['o_start','Pod start lines'],['o_pleg','Pod-state check age'],['o_lease','Heartbeat age'],['o_silent','Kubelets silent'],['o_restart','Software restarted'],['o_stop','Stop time, nodes']];
+const s2Def=[['w_host','Node software waiting for CPU'],['w_agents','Agents waiting'],['w_mem','Node software stalled on memory'],['w_runq','Run queue'],['w_util','CPU use']];
+const tabsDef=[['cpu','CPU lane'],['mem','Memory floor'],['disk','Disk'],['net','Network path'],['conf','Configuration'],['eng','Engineer\'s detail']];
+const cases={
+ cpu:{tiles:{t_wait:'warn'},table:'kubelet waits · containerd waits',s1:[],s2:['w_host','w_agents','w_util'],tab:'cpu',walk:[['Is any node being harmed?','Harm row green. "Node software starved of CPU" is yellow for one node; the timeline lights its risk row; the node tops the table on waits alone.'],['1 · Did a node operation fail?','Nothing. Runtime calls, stops and heartbeats are clean. Protected nodes keep their turn.'],['2 · Why: was the node\'s own software waiting?','containerd waited ~5% on the busiest node while CPU use sat at 100%: the residual wait the design accepts.'],['3 · CPU lane','Lane under 30% busy, agents not throttled: the boundary held. If an unprotected node were here, the Harm row would be red and the kubelet amber.'],['Leave with','"Busy, not harmed." No page. Waiting is risk, not harm, when nothing in the Harm row fired.']],caption:'A CPU-heavy tenant fills the pods\' 28 vCPUs. On a protected node the kubelet and containerd keep their turn on the lane; the only sign is a little containerd waiting and nothing in the Harm row. On an unprotected node runtime calls fail, stop times stretch, and section 2 shows the kubelet waiting in the same minutes.'},
+ mem:{tiles:{t_lease:'orange',t_silent:'orange',t_nmem:'orange',t_hmem:'warn',t_leaselate:'warn',t_oom:'expected'},table:'Stopped checking in · Kubelet silent · Node stalled on memory',s1:['o_lease','o_silent','o_pleg'],s2:['w_mem'],tab:'mem',walk:[['Is any node being harmed?','"Node stalled on memory", "Kubelet went silent" and "Node stopped checking in" orange (one node); "Heartbeat late" and "Node software stalled on memory" yellow. The timeline shows the stall rows lit first; that node tops the table.'],['1 · Did a node operation fail?','Heartbeat age climbed past 60 s while the kubelet\'s metrics went blank: a freeze, not a scrape problem.'],['2 · Why: was the node\'s own software waiting?','kubelet and containerd fully stalled on memory in the minutes before the silence.'],['3 · Memory floor','Code read back from disk at 1,000+ pages a second during pressure: the floor is missing or too small on this node class.'],['Leave with','"ip-10-0-41-7 froze in memory reclaim 14:22 to 14:31; host pages were reclaimed; check memory.min on that class."']],caption:'The pods reach their memory ceiling. Without a floor the kernel reclaims the kubelet\'s and containerd\'s own pages; they read them back, stall, and the node goes silent. The heartbeat, read from outside, is what tells you it froze rather than merely stopped reporting.'},
+ addr:{tiles:{t_cri:'orange'},table:'Refused work · Sandbox create',s1:['o_cri'],s2:[],tab:'net',walk:[['Is any node being harmed?','"Runtime refused work" orange: two nodes. They top the table with failed calls and slow sandbox creation, nothing else coloured. "Where to look next" says section 1.'],['1 · Did a node operation fail?','Only run_podsandbox failed; create and start are clean. In the Engineer\'s detail tab the mean sandbox time climbed alone.'],['2 · Why: was the node\'s own software waiting?','Nothing waited. The node is prompt. Skip the CPU story.'],['3 · Network path','"Sandboxes refused: no address free" fires on the same two nodes while "Free pod addresses" hit zero.'],['Leave with','"Sandbox creation failed on two nodes 09:40 to 09:52: aws-node had no free addresses. Warm-pool settings, not CPU."']],caption:'Pods land faster than aws-node can attach addresses. Sandboxes fail on a node that has no CPU, memory or disk trouble at all. The shape that gives it away: refused sandbox calls only, with nothing in section 2.'},
+ disk:{tiles:{t_stop:'warn',t_disk:'warn',t_hung:'warn'},table:'Slow to stop · Node stalled on disk · Stuck tasks',s1:['o_stop'],s2:[],tab:'disk',walk:[['Is any node being harmed?','Harm row green, three risk tiles yellow: "Containers slow to stop" at 70 s, "Node stalled on disk", "Stuck tasks". The timeline shows all three on the same minutes; one node tops the table.'],['1 · Did a node operation fail?','Stop time on one node climbs past 35 s and keeps climbing; it is not a 30 s plateau. The Disk tab\'s teardown calls are the slow ones.'],['2 · Why: was the node\'s own software waiting?','No CPU waiting. The lane is fine; the process is asleep in the kernel.'],['3 · Disk','Root volume busy near 100%, whole node stalled on disk, stuck tasks in the same minutes.'],['Leave with','"Teardown on ip-10-0-41-7 waited on the root volume 11:05 to 11:20; the volume\'s IOPS is the likely limit. Confirm in the journal with the chapter 11 query."']],caption:'A noisy pod saturates the root volume. Applications exit on time, but the runtime\'s cleanup sleeps on the disk and stops stretch to a minute. CPU reservation cannot help; the Disk tab names the owner.'},
+ fine:{tiles:{t_boot:'expected',t_errone:'warn'},table:'one isolated error',s1:[],s2:['w_util'],tab:null,walk:[['Is any node being harmed?','Harm row green, a yellow or two in the risk row: a healthy 50K run showed one node with containerd waiting 2.5% and one node with a single isolated runtime error. "Errors while nodes boot" counts in blue-grey. The table has one or two rows with one cell each.'],['1 · Did a node operation fail?','Blue-grey bars during the scale-up (new nodes\' first 5 minutes) and one isolated error. Expected.'],['2 · Why: was the node\'s own software waiting?','CPU use near 100% on the busiest node; the median node\'s kubelet and containerd waiting under 1%. This is the protection working.'],['3 · Deep dive','Nothing to open. The lane sits around 10 to 17% busy, as a reserve should.'],['Leave with','Nothing. Close the dashboard. High CPU use was never the question.']],caption:'A healthy 50K-pod scale-up. The fleet is busy, new nodes make their expected sandbox errors in blue-grey, and nothing failed on a settled node beyond one isolated call. The dashboard\'s job here is to let you walk away.'}};
+function drawMap(k){const c=cases[k];clear(mapSvg);const W=640;
+ const colOf=st=>st==='bad'?C.bad:st==='orange'?C.orange:st==='warn'?C.warn:st==='info'?C.info:st==='expected'?C.expected:st==='on'?C.kubelet:null;
+ const box=(x,y,w,h,label,state,small)=>{const col=colOf(state);const dark=col&&state!=='on'&&state!=='expected';el('rect',{x,y,width:w,height:h,rx:6,fill:col?(state==='on'?'#2b2615':col):'#17222e',stroke:col||C.line,'stroke-width':col?2:1,opacity:col?1:.55},mapSvg);const maxc=Math.max(6,Math.floor(w/(small?5.2:5.8)));const words=label.split(' ');let lines=[],line='';words.forEach(wd=>{if((line+' '+wd).length>maxc){lines.push(line);line=wd;}else line=line?line+' '+wd:wd;});lines.push(line);lines.forEach((l,i)=>el('text',{x:x+w/2,y:y+h/2+4+(i-(lines.length-1)/2)*12,'text-anchor':'middle',fill:dark?'#0b1117':col?(state==='on'?C.kubelet:C.ink):C.muted,'font-size':small?9:10.5,'font-weight':col?600:400},mapSvg,l));};
+ const sec=(y,title,on)=>{el('text',{x:16,y,fill:on?C.kubelet:C.dim,'font-size':12,'font-weight':600},mapSvg,title);};
+ const rowLabel=(x,y,t,col)=>el('text',{x,y,fill:col,'font-size':9.5,'font-weight':600,'letter-spacing':'.06em'},mapSvg,t.toUpperCase());
+ const anyHarm=Object.keys(c.tiles).some(id=>harmDef.some(t=>t[0]===id)),anyRisk=Object.keys(c.tiles).some(id=>riskDef.some(t=>t[0]===id));
+ sec(22,'Is any node being harmed?',true);
+ rowLabel(16,38,'Harm',C.bad);harmDef.forEach(([id,l],i)=>box(16+i*47,42,43,40,l,c.tiles[id]||null,true));
+ rowLabel(16,100,'At risk',C.warn);riskDef.forEach(([id,l],i)=>box(16+i*47,104,43,40,l,c.tiles[id]||null,true));
+ rowLabel(420,100,'Expected or context',C.expected);expDef.forEach(([id,l],i)=>box(420+i*47,104,43,40,l,c.tiles[id]||null,true));
+ box(16,154,300,36,'When did it start?  ·  timeline, harm rows first',(anyHarm||anyRisk)?'on':null);
+ box(324,154,300,36,'Where to look next  ·  first row that changed → section',(anyHarm||anyRisk)?'on':null);
+ box(16,198,608,40,'Which nodes need attention?  ·  coloured: '+c.table,c.table==='every cell clear'?null:'on');
+ sec(264,'1 · Did a node operation fail?',c.s1.length>0);
+ s1Def.forEach(([id,l],i)=>box(16+(i%4)*152,272+Math.floor(i/4)*46,146,40,l,c.s1.includes(id)?'on':null));
+ sec(380,'2 · Why: was the node\'s own software waiting?',c.s2.length>0);
+ s2Def.forEach(([id,l],i)=>box(16+i*122,388,116,40,l,c.s2.includes(id)?'on':null));
+ sec(460,'3 · Deep dive by boundary',!!c.tab);
+ tabsDef.forEach(([id,l],i)=>box(16+i*101,468,96,34,l,c.tab===id?'on':null));
+ if(c.tab){const i=tabsDef.findIndex(t=>t[0]===c.tab);el('path',{d:`M${16+i*101+48} 502 V520`,stroke:C.kubelet,'stroke-width':2,'marker-end':'url(#arrw)',fill:'none'},mapSvg);box(16,524,608,44,c.walk[3][1].length>150?c.walk[3][1].slice(0,148)+'…':c.walk[3][1],'on');}
+ else{box(16,524,608,44,'nothing to open','');}
+ c.walk.forEach((w,i)=>{document.getElementById('w'+(i+1)+'t').textContent=w[0];document.getElementById('w'+(i+1)+'s').textContent=w[1];});
+ document.querySelectorAll('#walk-steps > div').forEach((d,i)=>d.classList.toggle('on',true));
+ document.getElementById('case-caption').textContent=c.caption;document.querySelectorAll('#case-controls button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.case===k)));}
+document.querySelectorAll('#case-controls button').forEach(b=>b.addEventListener('click',()=>drawMap(b.dataset.case)));drawMap('cpu');
+
+/* ---------- rail ---------- */
+const links=[...document.querySelectorAll('#stack a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-30% 0px -60% 0px'});secs.forEach(s=>io.observe(s));
+})();
+</script>
+</body></html>
